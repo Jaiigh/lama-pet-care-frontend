@@ -1,6 +1,6 @@
-# 🐾 L.A.M.A. Pet Care Frontend
+# L.A.M.A. Pet Care Frontend
 
-Frontend for the **L.A.M.A. pet care** platform, built with [Next.js](https://nextjs.org) and [Tailwind CSS](https://tailwindcss.com).  
+Frontend for the L.A.M.A. pet care platform, built with [Next.js](https://nextjs.org) and [Tailwind CSS](https://tailwindcss.com).  
 This project enables pet owners, caretakers, and veterinarians to manage reservations, payments, profiles, reviews, and pet tracking.
 
 ---
@@ -24,21 +24,26 @@ pnpm install
 pnpm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
-
 ---
 
-## 🔒 Branch Rules for `main`
+## 🔒 Branch Rules for Main
 
 The `main` branch is protected with the following rules:
 
 1. **Require a pull request before merging**
+
    - Direct pushes to `main` are blocked.
    - All changes must be submitted via pull request (PR).
+   - The PR must have **at least 1 approval** before it can be merged.
+
 2. **Require status checks to pass before merging**
+
    - PRs must pass automated checks (build, lint, tests) before they can be merged.
+
 3. **Require branches to be up to date before merging**
+
    - The PR branch must be rebased or merged with the latest `main` before merging.
+
 4. **No bypass allowed**
    - These rules apply to everyone, including administrators.
 
@@ -46,31 +51,33 @@ These rules ensure `main` always contains production-ready, tested, and reviewed
 
 ---
 
-## 🌿 Branch Naming Scheme
+## 🏷 Branch Naming Scheme
 
-Format:
-
-```
-<type>/<short-description>
-```
-
-**Types:**
-
-- **feat/** – New features (e.g., `feat/add-appointment-page`)
-- **fix/** – Bug fixes (e.g., `fix/responsive-layout`)
-- **chore/** – Maintenance tasks, dependency updates, config changes (e.g., `chore/update-tailwind-config`)
-- **refactor/** – Code refactoring without changing functionality (e.g., `refactor/dashboard-layout`)
-- **remove/** – Removing unused code, dependencies, or features (e.g., `remove/prisma`)
-
-**Examples:**
+Follow this format:
 
 ```
-feat/user-profile
-fix/login-validation
-chore/update-readme
-refactor/api-service
-remove/old-api-endpoints
+<name>/<type>/<short-description>
 ```
+
+### Example:
+
+```
+jay/feat/resume-button
+```
+
+### Types:
+
+- **feat/** – New features (e.g., `jay/feat/add-appointment-page`)
+- **fix/** – Bug fixes (e.g., `alex/fix/responsive-layout`)
+- **chore/** – Maintenance tasks, dependency updates, config changes (e.g., `sam/chore/update-tailwind-config`)
+- **refactor/** – Code refactoring without changing functionality (e.g., `lee/refactor/dashboard-layout`)
+- **remove/** – Removing unused code, dependencies, or features (e.g., `jay/remove/prisma`)
+
+### More Examples:
+
+- `mike/feat/user-profile`
+- `anna/refactor/api-service`
+- `jay/remove/old-api-endpoints`
 
 ---
 
