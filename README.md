@@ -87,3 +87,8 @@ To learn more about Next.js:
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Learn Next.js](https://nextjs.org/learn)
+
+To learn more about React:
+
+- [Quick Start](https://react.dev/learn)
+- [Learn React with Interactive Designing](https://react.dev/learn/describing-the-ui)
