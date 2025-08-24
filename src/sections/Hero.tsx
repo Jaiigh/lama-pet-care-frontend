@@ -1,12 +1,12 @@
 import ArrowRight from "@/assets/arrow-right.svg";
 import Image from "next/image";
-import cogImage from "@/assets/cog.png";
+import cogImage from "@/assets/robodog.png";
 import cylinderImage from "@/assets/cylinder.png";
 import noodleImage from "@/assets/noodle.png";
 
 export const Hero = () => {
   return (
-    <section className="pt-8 pb-20 md:pt-5 md:pb-10 bg-[radial-gradient(ellipse_200%_100%_at_bottom_left,#203785,#EAEEFE_100%)] overflow-x-clip">
+    <section className="pt-8 pb-20 md:pt-5 md:pb-10 bg-[radial-gradient(ellipse_200%_100%_at_bottom_left,#86c3ba,#EAEEFE_100%)] overflow-x-clip">
       <div className="container mx-auto">
         <div className="md:flex items-center">
           <div className="pl-4 pr-4 md:w-[478px] lg:pl-10 ">
