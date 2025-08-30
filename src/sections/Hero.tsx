@@ -1,6 +1,6 @@
 import ArrowRight from "@/assets/arrow-right.svg";
 import Image from "next/image";
-import cogImage from "@/assets/robodog.png";
+import cogImage from "@/assets/ishow.png";
 import cylinderImage from "@/assets/cylinder.png";
 import noodleImage from "@/assets/noodle.png";
 

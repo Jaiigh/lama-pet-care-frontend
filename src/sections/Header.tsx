@@ -6,7 +6,7 @@ import Menu from "@/assets/menu.svg";
 export const Header = () => {
   return (
     <header className="sticky top-0 backdrop-blur-sm z-20">
-      <div className="flex justify-center items-center py-5 bg-black text-white text-sm">
+      <div className="flex justify-center items-center py-3 bg-black text-white text-sm">
         <p className="text-white/60 hidden md:block">
           Try convenient pet sitting with Lama
         </p>
