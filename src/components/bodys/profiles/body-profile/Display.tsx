@@ -1,0 +1,34 @@
+import './Display.css';
+import Image from 'next/image';
+import Logo from "@/assets/empty-avatar.png";
+
+function Display() {
+  return (
+    <div className="display-profile">
+        <div className="avatar-section">
+            <Image src={Logo} alt="avatar" width={120}height={120}/>
+            <div className="name">คุณมังกี้ ดี ลูฟฟี้</div>
+        </div>
+        <div className="info-section">
+            <div className='user-role'>* Pet Owner</div>
+            <div className='user-stats'>
+                <div className='stats-item'>
+                  <div>X</div>
+                  <div>สัตว์เลี้ยง</div>
+                </div>
+                <div className='stats-item'>
+                  <div>X</div>
+                  <div>บริการที่ใช้</div>
+                </div>
+                <div className='stats-item'>
+                  <div>X</div>
+                  <div>ปีที่เป็นสมาชิก</div>
+                </div>
+            </div>
+        </div>
+        <button className="edit-section">* แก้ไขโปรไฟล์</button>
+    </div>
+  );
+}
+
+export default Display;

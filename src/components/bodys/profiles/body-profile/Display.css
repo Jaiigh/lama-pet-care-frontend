@@ -1,0 +1,60 @@
+.display-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    padding: 30px 0px 50px 0px;
+    margin-top: 23px;
+    gap: 50px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+}
+
+.avatar-section {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 80%;
+}
+
+.user-role {
+    text-align: left;
+    background-color: #A7E5DC;
+    display: inline-block;
+    width: fit-content;
+    padding: 2px 15px 2px 10px;
+    border-radius: 20px;
+    font-size: smaller;
+}
+
+.user-stats {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.stats-item {
+    text-align: center;
+    width: 45%;
+    color: #072568;
+    background-color: #EAFFF9;
+    padding: 15px 30px 15px 30px;
+    border-radius: 10px;
+    font-size: smaller;
+}
+
+.edit-section {
+    background-color: #A7E5DC;
+    padding: 5px 50px 5px 45px;
+    border-radius: 20px;
+}

@@ -1,0 +1,37 @@
+.header {
+    padding-left: 20px;
+    color: #072568;
+}
+
+.info-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    padding: 30px 0px 50px 0px;
+    gap: 10px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+
+}
+
+.info-display {
+    padding: 0px 20px 0px 20px;
+    color: #072568;
+    flex: 1 1 45%;
+}
+
+.info-label {
+    padding-left: 10px;
+    padding-bottom: 10px;
+}
+
+.info-value{
+    background-color: #EAFFF9;
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
