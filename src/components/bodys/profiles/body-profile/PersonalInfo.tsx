@@ -1,16 +1,37 @@
+"use client";
+
 import "./PersonalInfo.css";
 
-const info_items = [
-    {id:1, label:"ชื่อนามสกุล", value:"คุณมังกี้ ดี ลูฟฟี้"}, 
-    {id:2, label:"เลขประจำตัวผู้ใช้", value:"LAMA001234"},
-    {id:3, label:"หมายเลขโทรศัพท์", value:"089-123-4567"}, 
-    {id:4, label:"อีเมล", value:"somchai@email.com"},
-    {id:5, label:"วันที่สมัครสมาชิก", value:"15 มกราคม 2023"}, 
-    {id:6, label:"วันเกิด", value:"15 มกราคม 2000"},
-    {id:7, label:"ที่อยู่", value:"123/45 ซอยกะหล่ำ 21 แขวงโอยิงาชิมะ เขตเอลบัฟ กรุงเทพฯ 10880"},
-];
+import { use, useEffect, useState } from 'react';
+import { Profile } from '@/interfaces/profileInterface';
+import { getProfile } from '@/services/profileService';
 
 function PersonalInfo() {
+    const [profile, setProfile] = useState<Profile | null>(null);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+        try {
+            const userId = '0917f704-f9e1-4d21-a940-8eb609242313'; // test user_id -> fix when auth is ready
+            const data = await getProfile(userId);
+            setProfile(data);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+        }
+        fetchProfile();
+    }, []);
+
+    const info_items = [
+        {id:1, label:"ชื่อนามสกุล", value: profile?.name || "loading..."}, 
+        {id:2, label:"เลขประจำตัวผู้ใช้", value: profile?.id || "loading..."},
+        {id:3, label:"หมายเลขโทรศัพท์", value: profile?.tel || "loading..."}, 
+        {id:4, label:"อีเมล", value: profile?.email || "loading..."},
+        {id:5, label:"วันที่สมัครสมาชิก", value: profile?.createdAt || "loading..."}, 
+        {id:6, label:"วันเกิด", value: profile?.birthDate || "loading..."},
+        {id:7, label:"ที่อยู่", value: profile?.address || "loading..."},
+    ];
+
     return (
         <div className="personal-info">
             <div className="header">* ข้อมูลส่วนตัว</div>
