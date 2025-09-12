@@ -21,7 +21,7 @@
 .pet-display {
     width: 200px;
     height: 250px;
-    padding: 20px 50px 20px 50px;
+    padding: 20px;
     justify-content: center;
     text-align: center;
     background-color: #EAFFF9;
@@ -29,6 +29,14 @@
     border-radius: 20px;
     border-width: 2px;
     border-color: #C6E0DD;
+}
+
+.pet-display img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: auto;
 }
 
 .add-pet-info {
@@ -51,7 +59,7 @@
 }
 
 .pet-info{
-    font-size: x-small;
+    font-size: smaller;
     text-align: left;
     padding-top: 15px;
 }
