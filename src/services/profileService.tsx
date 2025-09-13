@@ -20,11 +20,11 @@ export const getProfile = async (user_id: string): Promise<Profile> => {
     console.log(data);
     const profile: Profile = {
       name: data.name,
-      id: data.user_id, //this is bullshit -> fix later
-      tel: data.telephone_number,
+      user_id: data.user_id, //this is bullshit -> fix later
+      telephone_number: data.telephone_number,
       email: data.email,
-      createdAt: data.created_at,
-      birthDate: data.birth_date,
+      created_at: data.created_at,
+      birth_date: data.birth_date,
       address: data.address,
     };
     return profile;
@@ -55,11 +55,11 @@ export const updateProfile = async (
     console.log(data);
     const updatedProfile: Profile = {
       name: data.name,
-      id: data.user_id, //this is bullshit -> fix later
-      tel: data.telephone_number,
+      user_id: data.user_id, //this is bullshit -> fix later
+      telephone_number: data.telephone_number,
       email: data.email,
-      createdAt: data.created_at,
-      birthDate: data.birth_date,
+      created_at: data.created_at,
+      birth_date: data.birth_date,
       address: data.address,
     };
     return updatedProfile;
