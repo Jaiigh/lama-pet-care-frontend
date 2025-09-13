@@ -288,9 +288,9 @@ export default function RegisterForm() {
                 <option value="" disabled>
                   Select role
                 </option>
-                <option value="Customer">Customer</option>
-                <option value="Admin">Admin</option>
-                <option value="Staff">Staff</option>
+                <option value="PetOwner">PetOwner</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Caretaker">Caretaker</option>
               </select>
               {errors.role && (
                 <p id="role-error" className="mt-1 text-xs text-red-600">
