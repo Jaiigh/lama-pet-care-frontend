@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import CircleIcon from "@/assets/circle.svg";
 import CalendarIcon from "@/assets/calendar.svg";
 import HeartIcon from "@/assets/heart.svg";
 import SearchIcon from "@/assets/search.svg";
@@ -35,7 +34,11 @@ export const Features = () => {
         </h2>
         <div className="max-w-xl mx-auto">
           <p className="text-center mt-5 text-xl text-[#010D3E]">
-            akl;sjdfl;kajsdfklasdkvjfasl;dnvaknvajfvakljdflk;ajfdakjdfkvj;asdvnkakjrbvak;rgvl;naakl;sjdfl;kajsdfklasdkvjfasl;dnvaknvajfvakljdflk;ajfdakjdfkvj;asdvnkakjrbvak;rgvl;naakl;sjdfl;kajsdfklasdkvjfasl;dnvaknvajfvakljdflk;ajfdakjdfkvj;asdvnkakjrbvak;rgvl;na
+            คุณเลือกใช้บริการต่างๆได้ง่ายๆ เพียงไม่กี่คลิก ค้นหา จองวัน ตกลง
+            ไม่ว่าจะเป็นอยู่เป็นเพื่อน ไปเดินสวนสาธารณะ รวมถึงพาไปพบแพทย์
+            พร้อมดูรีวิวการทำงานของพนักงาน,
+            ติดตามการทำงานและสัตว์เลี้ยงของคุณได้ตลอด
+            มั่นใจได้เลยว่าพนักงานของเราทุกคนถูกฝึกมาอย่างดี
           </p>
         </div>
         <div className="mt-16 flex flex-col sm:flex-row gap-4 sm:gap-8 text-xl">

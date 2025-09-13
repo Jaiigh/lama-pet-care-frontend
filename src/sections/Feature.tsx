@@ -39,13 +39,15 @@ export const Feature = ({
       ></motion.div>
       <div ref={border}></div>
       <div>
-        <Image
-          src={icon}
-          alt={`${title} Icon`}
-          className="inline-flex justify-center items-center bg-[#a7e5dc] text-white rounded-full p-4"
-          width={64}
-          height={64}
-        />
+        <div className="inline-flex justify-center items-center bg-[#a7e5dc] rounded-full p-4 w-20 h-20">
+          <Image
+            src={icon}
+            alt={`${title} Icon`}
+            width={45}
+            height={45}
+            className="object-contain"
+          />
+        </div>
       </div>
       <h3 className="mt-6 font-bold">{title}</h3>
       <p className="mt-2 text-[#010D3E]">{description}</p>
