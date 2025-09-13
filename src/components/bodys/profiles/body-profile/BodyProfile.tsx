@@ -1,16 +1,15 @@
-import './BodyProfile.css'
-import Display from './Display';
-import PersonalInfo from './PersonalInfo';
-import Animal from './Animal';
-import Record from './Record';
+import Display from "./Display";
+import PersonalInfo from "./PersonalInfo";
+import Animal from "./Animal";
+import Record from "./Record";
 
 function BodyProfile() {
   return (
-    <div className="body-profile">
-      <div className="left-side">
+    <div className="flex flex-row w-full h-full gap-[8%]">
+      <div className="w-[35%]">
         <Display />
       </div>
-      <div className="right-side">
+      <div className="flex flex-col w-[65%] gap-10">
         <PersonalInfo />
         <Animal />
         <Record />
