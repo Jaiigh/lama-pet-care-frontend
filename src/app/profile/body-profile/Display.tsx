@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Logo from "@/images/empty-avatar.png";
+
 import { use, useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { getProfile } from "@/services/profileService";
@@ -20,7 +21,7 @@ function Display() {
       }
     };
     fetchProfile();
-  }, []);
+  }, [profile]);
 
   return (
     <div className="flex flex-col items-center w-full h-auto py-[30px] px-0 pb-[50px] mt-[23px] gap-[50px] bg-white border border-[#ccc] rounded-[15px]">
@@ -47,9 +48,6 @@ function Display() {
           </div>
         </div>
       </div>
-      <button className="bg-[#A7E5DC] px-[50px] py-[5px] pl-[45px] rounded-[20px]">
-        * แก้ไขโปรไฟล์
-      </button>
     </div>
   );
 }
