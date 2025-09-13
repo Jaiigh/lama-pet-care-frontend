@@ -25,7 +25,7 @@ export const Header = () => {
         <div className="container mx-auto">
           <div className="flex items-center justify-between">
             <div className="pl-4 lg:pl-10">
-              <Image src={Logo} alt="Lama Logo" height={100} width={150} />
+              <Image src={Logo} alt="Lama Logo" height={100} width={100} />
             </div>
             <div className="pr-4 lg:pr-10">
               <Image
