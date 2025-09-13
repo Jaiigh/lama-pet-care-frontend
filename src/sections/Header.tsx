@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Logo from "@/assets/lamalogo.png";
+import Logo from "@/images/lamalogo.png";
 import ArrowRight from "@/assets/arrow-right.svg";
 import Menu from "@/assets/menu.svg";
 
