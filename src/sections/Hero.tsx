@@ -66,7 +66,7 @@ export const Hero = () => {
             <motion.img
               src={dogImage.src}
               alt="Cog image"
-              className="md:absolute md:h-full md:w-auto md:max-w-none md:-left-6 lg:left-20"
+              className="w-full h-auto md:absolute md:h-full md:w-auto md:max-w-none md:-left-6 lg:left-40"
               animate={{
                 translateY: [-30, 30],
               }}
