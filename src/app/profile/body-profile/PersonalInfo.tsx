@@ -105,7 +105,7 @@ function PersonalInfo() {
                 />
               ) : (
                 <div className="bg-[#EAFFF9] w-full p-[10px] rounded-[10px]">
-                  {profile?.[item.key as keyof Profile]}
+                  {profile?.[item.key as keyof Profile] || "loading..."}
                 </div>
               )}
             </div>

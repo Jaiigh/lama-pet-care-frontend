@@ -21,7 +21,7 @@ function Display() {
       }
     };
     fetchProfile();
-  }, [profile]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center w-full h-auto py-[30px] px-0 pb-[50px] mt-[23px] gap-[50px] bg-white border border-[#ccc] rounded-[15px]">
