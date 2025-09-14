@@ -1,9 +1,9 @@
 export interface Profile {
   name: string;
-  id: string;
-  tel: string;
+  user_id: string;
+  telephone_number: string;
   email: string;
-  createdAt: string;
-  birthDate: string;
+  created_at: string;
+  birth_date: string;
   address: string;
 }

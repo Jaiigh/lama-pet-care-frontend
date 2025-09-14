@@ -32,15 +32,15 @@ function PersonalInfo() {
     },
     {
       id: 2,
-      key: "id",
+      key: "user_id",
       label: "เลขประจำตัวผู้ใช้",
-      value: profile?.id || "loading...",
+      value: profile?.user_id || "loading...",
     },
     {
       id: 3,
-      key: "tel",
+      key: "telephone_number",
       label: "หมายเลขโทรศัพท์",
-      value: profile?.tel || "loading...",
+      value: profile?.telephone_number || "loading...",
     },
     {
       id: 4,
@@ -50,15 +50,15 @@ function PersonalInfo() {
     },
     {
       id: 5,
-      key: "createdAt",
+      key: "created_at",
       label: "วันที่สมัครสมาชิก",
-      value: profile?.createdAt || "loading...",
+      value: profile?.created_at || "loading...",
     },
     {
       id: 6,
-      key: "birthDate",
+      key: "birth_date",
       label: "วันเกิด",
-      value: profile?.birthDate || "loading...",
+      value: profile?.birth_date || "loading...",
     },
     {
       id: 7,
