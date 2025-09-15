@@ -1,41 +1,66 @@
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { checkToken, login } from "@/services/authService";
 
 export default function LoginForm() {
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login submitted:", formData);
-    // Handle login logic here
+    setLoading(true);
+    setError(null);
+    try {
+      // Try to get token from localStorage (or other storage)
+      const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      let isValid = false;
+      if (storedToken) {
+        isValid = await checkToken(storedToken);
+      }
+      if (isValid) {
+        // Token is valid, skip login
+        setError("Already logged in.");
+        setLoading(false);
+        return;
+      }
+      // Token invalid or not found, proceed to login
+      const res = await login(formData.username, formData.password);
+      if (res.token) {
+        // Save token to localStorage
+        localStorage.setItem("token", res.token);
+        // Optionally save other user info
+        localStorage.setItem("user_id", res.user_id);
+        localStorage.setItem("role", res.role);
+        // Redirect or show success
+        setError(null);
+        // window.location.href = "/profile"; // Example redirect
+      } else {
+        setError("Login failed: No token returned.");
+      }
+    } catch (err: any) {
+      setError(err?.message || "Login error");
+    }
+    setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-[#EBF8F4] relative">
-      {/* Logo in top-left corner */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
-        <Link href="/">
-          <Image
-            src="/assets/images/logo.png"
-            alt="LAMA Pet Care Logo"
-            width={80}
-            height={27}
-            className="cursor-pointer sm:w-[100px] sm:h-[34px]"
-          />
-        </Link>
-      </div>
-
+      
       {/* Login form centered */}
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
         <div className="bg-[#C7EDE4] rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 w-full max-w-sm sm:max-w-md">
@@ -73,9 +98,13 @@ export default function LoginForm() {
             <button
               type="submit"
               className="w-full bg-[#D89B76] text-white font-semibold py-2.5 px-4 sm:py-3 sm:px-6 rounded-xl hover:bg-[#c8885e] transition-colors duration-200 text-sm sm:text-base"
+              disabled={loading}
             >
-              LOGIN
+              {loading ? "Logging in..." : "LOGIN"}
             </button>
+            {error && (
+              <div className="text-red-500 text-sm mt-2 text-center">{error}</div>
+            )}
           </form>
 
           {/* Register Link */}

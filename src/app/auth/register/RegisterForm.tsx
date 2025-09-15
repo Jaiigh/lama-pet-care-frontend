@@ -66,18 +66,6 @@ export default function RegisterForm() {
 
   return (
     <div className="min-h-screen bg-[#EBF8F4] relative">
-      {/* Logo in top-left corner */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
-        <Link href="/">
-          <Image
-            src="/assets/images/logo.png"
-            alt="LAMA Pet Care Logo"
-            width={80}
-            height={27}
-            className="cursor-pointer sm:w-[100px] sm:h-[34px]"
-          />
-        </Link>
-      </div>
 
       {/* Register form centered */}
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 py-16 sm:py-8">
