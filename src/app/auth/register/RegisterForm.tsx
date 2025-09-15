@@ -66,7 +66,6 @@ export default function RegisterForm() {
 
   return (
     <div className="min-h-screen bg-[#EBF8F4] relative">
-
       {/* Register form centered */}
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 py-16 sm:py-8">
         <div className="bg-[#C7EDE4] rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 w-full max-w-sm sm:max-w-md">
@@ -268,7 +267,11 @@ export default function RegisterForm() {
                 name="role"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-[#E8F6F4] rounded-lg border-0 focus:ring-0 focus:border-2 focus:border-[#76D8B1] focus-visible:ring-1 focus-visible:ring-[#76D8B1] outline-none transition-all duration-200 text-sm sm:text-base"
+                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 pr-8 sm:pr-10 bg-[#E8F6F4] rounded-lg border-0 focus:ring-0 focus:border-2 focus:border-[#76D8B1] focus-visible:ring-1 focus-visible:ring-[#76D8B1] outline-none transition-all duration-200 text-sm sm:text-base appearance-none bg-no-repeat bg-right bg-[length:16px_16px] sm:bg-[length:20px_20px]"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: "right 12px center",
+                }}
                 aria-invalid={errors.role ? "true" : "false"}
                 aria-describedby={errors.role ? "role-error" : undefined}
                 required
