@@ -23,7 +23,7 @@ export const CallToAction = () => {
   return (
     <div
       ref={containerRef}
-      className="bg-black text-white py-[72px] pb-[200px] sm:py-24 sm:pb-[300px] text-center overflow-x-clip"
+      className="bg-black text-white py-[72px] pb-[200px] sm:py-24 sm:pb-[72px] text-center overflow-x-clip"
     >
       <div className="container mx-auto px-4 max-w-xl relative">
         <motion.div style={{ translateY }}>
