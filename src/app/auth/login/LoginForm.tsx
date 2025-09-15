@@ -112,9 +112,9 @@ export default function LoginForm() {
                 <option value="" disabled>
                   Select role
                 </option>
-                <option value="Customer">Customer</option>
-                <option value="Admin">Admin</option>
-                <option value="Staff">Staff</option>
+                <option value="PetOwner">PetOwner</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Caretaker">Caretaker</option>
               </select>
             </div>
 
