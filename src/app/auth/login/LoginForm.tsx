@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { checkToken, login } from "@/services/authService";
 
 export default function LoginForm() {
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -14,50 +14,66 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      // Try to get token from localStorage (or other storage)
-      const storedToken =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      let isValid = false;
-      if (storedToken) {
-        isValid = await checkToken(storedToken);
-      }
-      if (isValid) {
-        // Token is valid, skip login
-        setError("Already logged in.");
-        setLoading(false);
-        return;
-      }
-      // Token invalid or not found, proceed to login
-      const res = await login(formData.username, formData.password);
-      if (res.token) {
-        // Save token to localStorage
-        localStorage.setItem("token", res.token);
-        // Optionally save other user info
-        localStorage.setItem("user_id", res.user_id);
-        localStorage.setItem("role", res.role);
-        // Redirect or show success
-        setError(null);
-        // window.location.href = "/profile"; // Example redirect
-      } else {
-        setError("Login failed: No token returned.");
-      }
-    } catch (err: any) {
-      setError(err?.message || "Login error");
+  
+const handleInputChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+) => {
+  const { name, value } = e.target;
+  setFormData(prev => {
+    const updated = { ...prev, [name]: value };
+    console.log("Updated formData:", updated); // logs the new state immediately
+    return updated;
+  });
+};
+
+// Handle form submission
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
+
+  try {
+    // Check if there is a stored token
+    const storedToken =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+    let isValid = false;
+    if (storedToken) {
+      isValid = await checkToken(storedToken);
     }
+
+    if (isValid) {
+      setError("Already logged in.");
+      setLoading(false);
+      return;
+    }
+
+    // Attempt login
+    const res = await login(formData.username, formData.password, formData.role);
+
+    if (res.token) {
+      // Save token and user info
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user_id", res.user_id);
+      localStorage.setItem("role", res.role);
+
+      setError(null);
+      window.location.href = "/"; // redirect after login
+    } else {
+      setError("Login failed: No token returned.");
+    }
+  } catch (err: any) {
+    setError(err?.message || "Login error");
+  } finally {
     setLoading(false);
-  };
+  }
+};
+console.log("LoginForm rendered (client)");
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-[#EBF8F4] relative">

@@ -1,7 +1,7 @@
 
 import { environment } from "@/env/environment";
 
-const authURL = environment.masterUrl + "auth/login/";
+const loginURL = environment.masterUrl + "auth/login/";
 const checkTokenURL = environment.masterUrl + "auth/check_token";
 
 export interface LoginResponse {
@@ -42,17 +42,19 @@ export const checkToken = async (token: string): Promise<boolean> => {
 export const login = async (
     email: string,
     password: string,
-    role: string = "owner"
+    role: string 
 ): Promise<LoginResponse> => {
     try {
-        const response = await fetch(authURL, {
+
+        const url = `${loginURL}?role=${encodeURIComponent(role)}`;
+        const response = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({ email, password }),
         });
-
+        
         if (!response.ok) {
             console.error("Failed to login:", response.statusText);
             throw new Error("Failed to login");
