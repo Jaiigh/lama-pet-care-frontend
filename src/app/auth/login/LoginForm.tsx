@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { checkToken, login } from "@/services/authService";
 
 export default function LoginForm() {
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
     role: "", // Empty string for proper validation
   });
@@ -16,7 +18,12 @@ export default function LoginForm() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Get role from URL query parameter
+    const roleFromUrl = searchParams.get("role");
+    if (roleFromUrl) {
+      setFormData(prev => ({ ...prev, role: roleFromUrl }));
+    }
+  }, [searchParams]);
 
   
 const handleInputChange = (
@@ -29,14 +36,14 @@ const handleInputChange = (
     return updated;
   });
 };
-
 // Handle form submission
+
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setLoading(true);
   setError(null);
 
-  try {
+  try {console.log("Handled form submission");
     // Check if there is a stored token
     const storedToken =
       typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -53,13 +60,18 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
 
     // Attempt login
-    const res = await login(formData.username, formData.password, formData.role);
-
+    const res = await login(formData.email, formData.password, formData.role);
     if (res.token) {
       // Save token and user info
       localStorage.setItem("token", res.token);
       localStorage.setItem("user_id", res.user_id);
       localStorage.setItem("role", res.role);
+
+      console.log("Login successful, saved data:", {
+        token: res.token,
+        user_id: res.user_id,
+        role: res.role
+      });
 
       setError(null);
       window.location.href = "/"; // redirect after login
@@ -67,12 +79,12 @@ const handleSubmit = async (e: React.FormEvent) => {
       setError("Login failed: No token returned.");
     }
   } catch (err: any) {
+    console.error("Login error:", err);
     setError(err?.message || "Login error");
   } finally {
     setLoading(false);
   }
 };
-console.log("LoginForm rendered (client)");
   if (!mounted) return null;
 
   return (
@@ -89,10 +101,10 @@ console.log("LoginForm rendered (client)");
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div>
               <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                value={formData.username}
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-[#E8F6F4] rounded-lg border-0 focus:ring-0 focus:border-2 focus:border-[#76D8B1] outline-none transition-all duration-200 text-sm sm:text-base"
                 required
@@ -128,9 +140,9 @@ console.log("LoginForm rendered (client)");
                 <option value="" disabled>
                   Select role
                 </option>
-                <option value="PetOwner">PetOwner</option>
-                <option value="Doctor">Doctor</option>
-                <option value="Caretaker">Caretaker</option>
+                <option value="owner">PetOwner</option>
+                <option value="doctor">Doctor</option>
+                <option value="caretaker">Caretaker</option>
               </select>
             </div>
 

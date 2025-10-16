@@ -1,4 +1,3 @@
-
 import { environment } from "@/env/environment";
 
 const loginURL = environment.masterUrl + "auth/login/";
@@ -24,6 +23,7 @@ export const checkToken = async (token: string): Promise<boolean> => {
             },
         });
         if (!response.ok) {
+            console.error("Token check failed:", response.status, response.statusText);
             return false;
         }
         const data = await response.json();
@@ -46,18 +46,36 @@ export const login = async (
 ): Promise<LoginResponse> => {
     try {
 
-        const url = `${loginURL}?role=${encodeURIComponent(role)}`;
+        const url = `${loginURL}${role}`;
+        
+        const requestBody = {
+            email,
+            password
+        };
         const response = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify(requestBody),
         });
         
+        
         if (!response.ok) {
-            console.error("Failed to login:", response.statusText);
-            throw new Error("Failed to login");
+            let errorMessage = `Failed to login: ${response.status} ${response.statusText}`;
+
+            try {
+                const errorData = await response.json();
+                if (errorData.message) {
+                    errorMessage += ` - ${errorData.message}`;
+                }
+                console.error("Login failed with JSON response:", errorData);
+            } catch (parseError) {
+                // If it's not JSON, log the parsing error
+                console.error("Failed to parse error response as JSON:", parseError);
+            }
+
+            throw new Error(errorMessage);
         }
 
         const res = await response.json();
