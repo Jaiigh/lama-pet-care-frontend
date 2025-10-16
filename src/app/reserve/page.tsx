@@ -2,6 +2,12 @@
 
 import "./page.css";
 
+import { use, useEffect, useState } from "react";
+import { Reservation } from "@/interfaces/reservationInterface";
+import { getReservation } from "@/services/reservationService";
+import test from "node:test";
+
+
 const reserves = [
   {
     id: 1,
@@ -30,6 +36,27 @@ const reserves = [
 ]
 
 export default function Home() {
+  const [reservations, setReservations] = useState<Reservation[] | null>(null);
+  
+    useEffect(() => {
+      const fetchReservations = async () => {
+        try {
+          const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjA2NDM4MzAsImlhdCI6MTc2MDYyMjIzMCwibmJmIjoxNzYwNjIyMjMwLCJyb2xlIjoib3duZXIiLCJ1c2VyX2lkIjoiNjU4Yjg3YzItOWJmYS00M2ViLWI1YTAtMThiMDk0Y2I5OTZjIn0.lduCXp-0cZzOsLKPW7531t-cSvAmGExZiTu2pikTAu4"; // test token -> fix when auth is ready
+          const data = await getReservation(testToken);
+          setReservations(data);
+        } catch (error) {
+          console.error("Error fetching reservations:", error);
+        }
+      };
+      fetchReservations();
+    }, []);
+
+  const shortenID = (id: string) => {
+    if (id.length <= 12) return id;
+    return `${id.slice(0, 8)}...${id.slice(-4)}`;
+  };
+  
+
   return (
     <div className="reserve-management">
         <div className="header-container">
@@ -41,23 +68,23 @@ export default function Home() {
             <div>เสร็จสิ้น</div>
         </div>
         <div className="reserve-container">
-            {reserves.map((reserve) => (
-                <div key={reserve.id} className="reserve-item">
+            {reservations.map((reserve) => (
+                <div key={reserve.service_id} className="reserve-item">
                     <div className="detail-group">
                         <div className="label">หมายเลขการจอง</div>
-                        <div className="value">{reserve.bookingID}</div>
+                        <div className="value">{shortenID(reserve.service_id)}</div>
                     </div>
                     <div className="detail-group">
                         <div className="label">วันที่จอง</div>
-                        <div className="value">{reserve.date}</div>
+                        <div className="value">{reserve.reserve_date.split("T")[0]}</div>
                     </div>
                     <div className="detail-group">
                         <div className="label">เวลา</div>
-                        <div className="value">{reserve.time}</div>
+                        <div className="value">{reserve.reserve_date.split("T")[1]}</div>
                     </div>
                     <div className="detail-group">
-                        <div className="label">ประเภทบริการ</div>
-                        <div className={`service-${reserve.service}`}>{reserve.service}</div>
+                        <div className="label">ราคาค่าบริการ</div>
+                        <div className="value">{reserve.price}</div>
                     </div>
                     <div className="detail-group">
                         <div className="label">สถานะ</div>

@@ -43,6 +43,9 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .reserve-item {
@@ -55,6 +58,7 @@
     display: grid;
     grid-template-columns: 150px 150px 150px 150px 150px; 
     column-gap: 80px;
+    
 }
 
 .detail-group {
@@ -66,13 +70,13 @@
 
 .detail-group .label {
     font-size: 13px;
-    margin-left: 10px;
 }
 
 .detail-group .value {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: bold;
     color: #3AB795;
+    justify-content: center;
 }
 
 .detail-group .service-Doctor {
@@ -95,32 +99,32 @@
     border-radius: 20px;
 }
 
-.detail-group .status-Ongoing {
+.detail-group .status-ongoing {
     background-color: #FFD978;
     font-size: 16px;
     font-weight: bold;
     color: #000000;
 
     padding: 5px 40px;
-    border-radius: 20px;
+    border-radius: 15px;
 }
 
-.detail-group .status-Wait {
+.detail-group .status-wait {
     background-color: #F1EED9;
     font-size: 16px;
     font-weight: bold;
     color: #000000;
 
     padding: 5px 40px;
-    border-radius: 20px;
+    border-radius: 15px;
 }
 
-.detail-group .status-Finished {
+.detail-group .status-finished {
     background-color: #61C5AA;
     font-size: 16px;
     font-weight: bold;  
     color: #000000;
 
     padding: 5px 40px;
-    border-radius: 20px;
+    border-radius: 15px;
 }
