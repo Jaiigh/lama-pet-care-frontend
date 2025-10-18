@@ -3,11 +3,7 @@
 import Image from "next/image";
 import Logo from "@/images/empty-avatar.png";
 
-<<<<<<< HEAD
 import { use, useEffect, useState } from "react";
-=======
-import { useEffect, useState } from "react";
->>>>>>> origin/main
 import { Profile } from "@/interfaces/profileInterface";
 import { getProfile } from "@/services/profileService";
 
@@ -17,8 +13,7 @@ function Display() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-        const data = await getProfile(userId);
+        const data = await getProfile();
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);

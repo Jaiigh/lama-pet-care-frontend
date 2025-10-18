@@ -1,7 +1,7 @@
 import { environment } from "@/env/environment";
 
-const loginURL = environment.masterUrl + "auth/login/";
-const checkTokenURL = environment.masterUrl + "auth/check_token";
+const loginURL = environment.masterUrl + "/auth/login/";
+const checkTokenURL = environment.masterUrl + "/auth/check_token";
 
 export interface LoginResponse {
     token: string;
@@ -93,6 +93,44 @@ export const login = async (
         return loginResponse;
     } catch (err) {
         console.error("Error logging in:", err);
+        throw err;
+    }
+};
+export const register = async (
+    address: string,
+    birth_date: string,
+    email: string,
+    name: string,
+    password: string,
+    telephone_number: string,
+    role: string
+): Promise<void> => {
+    try {
+        const url = `${environment.masterUrl}/auth/register/${role}`;
+        birth_date = `${birth_date}T00:00:00+07:00`; // Append time and timezone
+        const requestBody = {
+            address,
+            birth_date,
+            email,
+            name,
+            password,
+            telephone_number
+        };
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+        });
+       if (!response.ok) {
+        // อ่าน message จาก body ของ response
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to register:", errorData.message || response.statusText);
+        throw new Error("Failed to register");
+}   
+    } catch (err) {
+        console.error("Error registering:", err);
         throw err;
     }
 };

@@ -1,3 +1,4 @@
+"use client";
 import ConfirmButton from "../components/ConfirmButton";
 import TimeSlotPicker from "../components/TimeSlotPicker";
 import PetSelector from "../components/PetSelector";

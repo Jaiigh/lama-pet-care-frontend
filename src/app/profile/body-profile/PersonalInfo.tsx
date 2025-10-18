@@ -11,9 +11,8 @@ function PersonalInfo() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      try {
-        const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-        const data = await getProfile(userId);
+      try { // test user_id -> fix when auth is ready
+        const data = await getProfile();
         setProfile(data);
         setFormData(data);
       } catch (error) {

@@ -1,8 +1,7 @@
-<<<<<<< HEAD
+"use client";
 import { handler } from "next/dist/build/templates/app-page";
+import { use } from "react";
 
-=======
->>>>>>> origin/main
 const record = [
   {
     id: 1,

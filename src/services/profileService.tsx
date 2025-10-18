@@ -1,14 +1,17 @@
 import { Profile } from "@/interfaces/profileInterface";
 import { environment } from "@/env/environment";
 
-const ownerURL = environment.masterUrl + "owner/";
+const ownerURL = environment.masterUrl + "/user/";
 
-export const getProfile = async (user_id: string): Promise<Profile> => {
+export const getProfile = async (): Promise<Profile> => {
   try {
-    const response = await fetch(ownerURL + user_id, {
+    const storedToken =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const response = await fetch(ownerURL, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${storedToken}`,
       },
     });
     if (!response.ok) {

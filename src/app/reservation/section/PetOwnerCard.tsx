@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import Logo from "@/images/empty-avatar.png";
 import { use, useEffect, useState } from "react";
@@ -9,8 +10,7 @@ function PetOwnerCard() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-        const data = await getProfile(userId);
+        const data = await getProfile();
         setProfile(data);
       } catch (error) {
         console.error("Error fetching profile:", error);
