@@ -4,7 +4,7 @@ import { environment } from "@/env/environment";
 
 const reservationURL = environment.masterUrl + environment.APIversion + "services/";
 
-export const getReservation = async (token: string): Promise<ReservationApiResponse> => {
+export const getReservation = async (token: string | null): Promise<ReservationApiResponse> => {
   try {
     const response = await fetch(reservationURL, {
       method: "GET",
