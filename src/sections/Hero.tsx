@@ -12,7 +12,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 
 export const Hero = () => {
   const heroRef = useRef<HTMLDivElement>(null);

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import CalendarIcon from "@/assets/calendar.svg";
 import HeartIcon from "@/assets/heart.svg";
 import SearchIcon from "@/assets/search.svg";

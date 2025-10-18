@@ -1,5 +1,3 @@
-import { handler } from "next/dist/build/templates/app-page";
-
 const record = [
   {
     id: 1,
