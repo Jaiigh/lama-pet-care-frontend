@@ -1,0 +1,45 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- L -->
+  <g transform="translate(0, 8)">
+    <rect x="2" y="2" width="16" height="16" rx="8" fill="#76D8B1" stroke="#5cb896" stroke-width="1"/>
+    <circle cx="6" cy="8" r="1.5" fill="white"/>
+    <circle cx="12" cy="8" r="1.5" fill="white"/>
+    <path d="M6 12 Q9 14 12 12" stroke="white" stroke-width="1" fill="none"/>
+    <ellipse cx="4" cy="4" rx="2" ry="3" fill="#5cb896"/>
+    <ellipse cx="14" cy="4" rx="2" ry="3" fill="#5cb896"/>
+  </g>
+  
+  <!-- A -->
+  <g transform="translate(22, 8)">
+    <rect x="2" y="2" width="16" height="16" rx="8" fill="#FFB6C1" stroke="#FF9FAB" stroke-width="1"/>
+    <circle cx="6" cy="8" r="1.5" fill="white"/>
+    <circle cx="12" cy="8" r="1.5" fill="white"/>
+    <path d="M6 12 Q9 14 12 12" stroke="white" stroke-width="1" fill="none"/>
+    <ellipse cx="4" cy="4" rx="1.5" ry="4" fill="#FF9FAB"/>
+    <ellipse cx="14" cy="4" rx="1.5" ry="4" fill="#FF9FAB"/>
+  </g>
+  
+  <!-- M -->
+  <g transform="translate(44, 8)">
+    <rect x="2" y="2" width="16" height="16" rx="8" fill="#DEB887" stroke="#CD853F" stroke-width="1"/>
+    <circle cx="6" cy="8" r="1.5" fill="white"/>
+    <circle cx="12" cy="8" r="1.5" fill="white"/>
+    <path d="M6 12 Q9 14 12 12" stroke="white" stroke-width="1" fill="none"/>
+    <ellipse cx="4" cy="4" rx="2" ry="3" fill="#CD853F"/>
+    <ellipse cx="14" cy="4" rx="2" ry="3" fill="#CD853F"/>
+    <polygon points="8,3 10,3 12,6 10,6" fill="#CD853F"/>
+  </g>
+  
+  <!-- A -->
+  <g transform="translate(66, 8)">
+    <rect x="2" y="2" width="16" height="16" rx="8" fill="#FFB6C1" stroke="#FF9FAB" stroke-width="1"/>
+    <circle cx="6" cy="8" r="1.5" fill="white"/>
+    <circle cx="12" cy="8" r="1.5" fill="white"/>
+    <path d="M6 12 Q9 14 12 12" stroke="white" stroke-width="1" fill="none"/>
+    <ellipse cx="4" cy="4" rx="1.5" ry="4" fill="#FF9FAB"/>
+    <ellipse cx="14" cy="4" rx="1.5" ry="4" fill="#FF9FAB"/>
+  </g>
+  
+  <!-- Text below -->
+  <text x="40" y="35" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="8" font-weight="600" fill="#76D8B1">LAMA</text>
+</svg>

@@ -3,7 +3,11 @@
 import Image from "next/image";
 import Logo from "@/images/empty-avatar.png";
 
+<<<<<<< HEAD
 import { use, useEffect, useState } from "react";
+=======
+import { useEffect, useState } from "react";
+>>>>>>> origin/main
 import { Profile } from "@/interfaces/profileInterface";
 import { getProfile } from "@/services/profileService";
 

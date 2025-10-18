@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 import { handler } from "next/dist/build/templates/app-page";
 
+=======
+>>>>>>> origin/main
 const record = [
   {
     id: 1,
