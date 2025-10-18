@@ -29,8 +29,26 @@
   .btn-text {
     @apply text-black bg-transparent border border-black/10;
   }
+  
+  .dropdown {
+    @apply outline-none focus:outline-none focus:ring-0;
+  }
 }
-
+ .dropdown {
+    position: relative;
+    border: 1px solid black;
+    border-radius: 2px;
+    padding: 14px;
+}
+  .dropdown::after {
+    content: "▼";
+    font-size: 1rem;
+    right: 10px;
+    position: absolute;
+    transform: translateY(-50%);
+    top: 50%;
+    pointer-events: none; /* กันไม่ให้คลิกโดน */
+}
 body {
   background: var(--background);
   color: var(--foreground);

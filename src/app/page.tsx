@@ -8,12 +8,12 @@ import { CallToAction } from "@/sections/CallToAction";
 
 export default function Home() {
   return (
-    <>
-      <Header />
+    <div>
+      {/* <Header /> */}
       <Hero />
       <Features />
       <Services />
       <CallToAction />
-    </>
+    </div>
   );
 }

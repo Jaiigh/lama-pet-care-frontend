@@ -2,6 +2,7 @@
 
 import ArrowRight from "@/assets/arrow-right.svg";
 import Image from "next/image";
+import Link from "next/link";
 import dogImage from "@/images/ishow.png";
 import cylinderImage from "@/images/cylinder.png";
 import noodleImage from "@/images/noodle.png";
@@ -49,7 +50,9 @@ export const Hero = () => {
               dictum accumsan.
             </p>
             <div className="flex gap-2 items-center mt-[30px]">
-              <button className="btn btn-primary">Sign Up</button>
+              <Link href="/auth/login">
+                <button className="btn btn-primary">Sign Up</button>
+              </Link>
               <button className="btn btn-text">
                 <span>Learn More</span>
                 <Image
@@ -65,8 +68,8 @@ export const Hero = () => {
           <div className="mt-20 md:mt-0 md:h-[648px] md:flex-1 relative">
             <motion.img
               src={dogImage.src}
-              alt="Cog image"
-              className="md:absolute md:h-full md:w-auto md:max-w-none md:-left-6 lg:left-20"
+              alt="paw print"
+              className="w-full h-auto md:absolute md:h-full md:w-auto md:max-w-none md:-left-6 lg:left-40"
               animate={{
                 translateY: [-30, 30],
               }}

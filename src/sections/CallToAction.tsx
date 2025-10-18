@@ -6,6 +6,7 @@ import emojiStarImage from "@/images/emojistar.png";
 import { useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export const CallToAction = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,7 +24,7 @@ export const CallToAction = () => {
   return (
     <div
       ref={containerRef}
-      className="bg-black text-white py-[72px] pb-[200px] sm:py-24 sm:pb-[300px] text-center"
+      className="bg-black text-white py-[72px] pb-[200px] sm:py-24 sm:pb-[72px] text-center overflow-x-clip"
     >
       <div className="container mx-auto px-4 max-w-xl relative">
         <motion.div style={{ translateY }}>
@@ -48,9 +49,11 @@ export const CallToAction = () => {
           พร้อมมอบสิ่งที่ดีที่สุดให้ลูกรักของคุณแล้วหรือยัง?
         </p>
         <div className="flex gap-2 mt-10 justify-center">
-          <button className="btn bg-black text-white border border-white">
-            Sign up
-          </button>
+          <Link href="/auth/login">
+            <button className="btn bg-black text-white border border-white">
+              Sign up
+            </button>
+          </Link>
           <button className="btn bg-white text-black border border-black">
             Learn more
           </button>

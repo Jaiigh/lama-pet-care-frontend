@@ -9,19 +9,19 @@ import clsx from "clsx";
 const items = [
   {
     service: "บริการฝากเลี้ยง",
-    info: "ควย",
+    info: "A",
   },
   {
     service: "บริการสัตวแพทย์",
-    info: "หี",
+    info: "B",
   },
   {
-    service: "บริการขายตัว",
-    info: "หำ",
+    service: "บริการ...",
+    info: "C",
   },
   {
     service: "บริการอื่นๆ",
-    info: "ดำ",
+    info: "D",
   },
 ];
 
@@ -63,7 +63,7 @@ export const Services = () => {
     <div className="text-black py-[72px] sm:py-24 bg-[#F8F8F1]">
       <div className="container mx-auto px-4 max-w-6xl">
         <h2 className="text-5xl text-center sm:text-6xl sm:max-w-[600px] mx-auto font-bold tracking-tighter">
-          Services we will FUCKING provide
+          Services we will provide
         </h2>
         <div className="mt-12 max-w-[648px] mx-auto">
           {items.map(({ service, info }) => (
