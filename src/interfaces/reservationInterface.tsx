@@ -7,3 +7,13 @@ export interface Reservation {
   status: string;
   reserve_date: string;
 }
+
+export interface ReservationApiResponse {
+  message: string;
+  data: {
+    amount: number;
+    page: number;
+    services: Reservation[];
+  };
+  status: number;
+};

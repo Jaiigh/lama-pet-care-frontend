@@ -3,47 +3,20 @@
 import "./page.css";
 
 import { use, useEffect, useState } from "react";
-import { Reservation } from "@/interfaces/reservationInterface";
+import { Reservation, ReservationApiResponse } from "@/interfaces/reservationInterface";
 import { getReservation } from "@/services/reservationService";
-import test from "node:test";
-
-
-const reserves = [
-  {
-    id: 1,
-    bookingID: "1234567880",
-    date: "22-10-2025",
-    time: "11.00AM",
-    service: "Doctor",
-    status: "Ongoing"
-  },
-  {
-    id: 2,
-    bookingID: "1234567880",
-    date: "22-10-2025",
-    time: "11.00AM",
-    service: "Caretaker",
-    status: "Wait"
-  },
-  {
-    id: 3,
-    bookingID: "1234567880",
-    date: "22-10-2025",
-    time: "11.00AM",
-    service: "Doctor",
-    status: "Finished"
-  },
-]
 
 export default function Home() {
-  const [reservations, setReservations] = useState<Reservation[] | null>(null);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  
   
     useEffect(() => {
       const fetchReservations = async () => {
         try {
-          const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjA2NDM4MzAsImlhdCI6MTc2MDYyMjIzMCwibmJmIjoxNzYwNjIyMjMwLCJyb2xlIjoib3duZXIiLCJ1c2VyX2lkIjoiNjU4Yjg3YzItOWJmYS00M2ViLWI1YTAtMThiMDk0Y2I5OTZjIn0.lduCXp-0cZzOsLKPW7531t-cSvAmGExZiTu2pikTAu4"; // test token -> fix when auth is ready
-          const data = await getReservation(testToken);
-          setReservations(data);
+          const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjA4MTgxMTcsImlhdCI6MTc2MDc5NjUxNywibmJmIjoxNzYwNzk2NTE3LCJwdXJwb3NlIjoiYWNjZXNzIiwicm9sZSI6Im93bmVyIiwidXNlcl9pZCI6IjY1OGI4N2MyLTliZmEtNDNlYi1iNWEwLTE4YjA5NGNiOTk2YyJ9.dJ6tHd8fPwEDdhYAS6_8QFq6KT6uvWzURLfNWyRr2LI"; // test token -> fix when auth is ready
+          const response : ReservationApiResponse = await getReservation(testToken);
+          const services = response.data.services;
+          setReservations(services);
         } catch (error) {
           console.error("Error fetching reservations:", error);
         }
