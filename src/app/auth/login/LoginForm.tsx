@@ -21,70 +21,70 @@ export default function LoginForm() {
     // Get role from URL query parameter
     const roleFromUrl = searchParams.get("role");
     if (roleFromUrl) {
-      setFormData(prev => ({ ...prev, role: roleFromUrl }));
+      setFormData((prev) => ({ ...prev, role: roleFromUrl }));
     }
   }, [searchParams]);
 
-  
-const handleInputChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-) => {
-  const { name, value } = e.target;
-  setFormData(prev => {
-    const updated = { ...prev, [name]: value };
-    console.log("Updated formData:", updated); // logs the new state immediately
-    return updated;
-  });
-};
-// Handle form submission
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      console.log("Updated formData:", updated); // logs the new state immediately
+      return updated;
+    });
+  };
+  // Handle form submission
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  try {console.log("Handled form submission");
-    // Check if there is a stored token
-    const storedToken =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    try {
+      console.log("Handled form submission");
+      // Check if there is a stored token
+      const storedToken =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-    let isValid = false;
-    if (storedToken) {
-      isValid = await checkToken(storedToken);
-    }
+      let isValid = false;
+      if (storedToken) {
+        isValid = await checkToken(storedToken);
+      }
 
-    if (isValid) {
-      setError("Already logged in.");
+      if (isValid) {
+        setError("Already logged in.");
+        setLoading(false);
+        return;
+      }
+
+      // Attempt login
+      const res = await login(formData.email, formData.password, formData.role);
+      if (res.token) {
+        // Save token and user info
+        localStorage.setItem("token", res.token);
+        localStorage.setItem("user_id", res.user_id);
+        localStorage.setItem("role", res.role);
+
+        console.log("Login successful, saved data:", {
+          token: res.token,
+          user_id: res.user_id,
+          role: res.role,
+        });
+
+        setError(null);
+        window.location.href = "/"; // redirect after login
+      } else {
+        setError("Login failed: No token returned.");
+      }
+    } catch (err: unknown) {
+      console.error("Login error:", err);
+      setError(err instanceof Error ? err.message : "Login error");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Attempt login
-    const res = await login(formData.email, formData.password, formData.role);
-    if (res.token) {
-      // Save token and user info
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user_id", res.user_id);
-      localStorage.setItem("role", res.role);
-
-      console.log("Login successful, saved data:", {
-        token: res.token,
-        user_id: res.user_id,
-        role: res.role
-      });
-
-      setError(null);
-      window.location.href = "/"; // redirect after login
-    } else {
-      setError("Login failed: No token returned.");
-    }
-  } catch (err: any) {
-    console.error("Login error:", err);
-    setError(err?.message || "Login error");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   if (!mounted) return null;
 
   return (
@@ -163,7 +163,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Register Link */}
           <div className="text-center mt-4 sm:mt-6">
             <span className="text-gray-600 text-sm sm:text-base">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/auth/register"
                 className="text-[#e8bc4e] hover:text-[#b5933d] font-medium"

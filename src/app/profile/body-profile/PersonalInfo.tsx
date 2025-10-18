@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { getProfile, updateProfile } from "@/services/profileService";
 
