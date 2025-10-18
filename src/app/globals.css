@@ -31,9 +31,6 @@
     @apply text-black bg-transparent border border-black/10;
   }
   
-  .dropdown {
-    @apply outline-none focus:outline-none focus:ring-0;
-  }
 }
  .dropdown {
     position: relative;
