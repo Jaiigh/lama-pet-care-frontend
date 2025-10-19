@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Pet care management platform",
 };
 
-import { RoleProvider } from '@/context/RoleContext';
+import { RoleProvider } from "@/context/RoleContext";
 
 export default function RootLayout({
   children,

@@ -56,7 +56,7 @@ const OwnerCard = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center w-full max-w-md mx-auto">
+      <div className="flex flex-col items-center text-center w-full">
         <div className="animate-pulse">
           <div className="w-18 h-18 bg-gray-300 rounded-full mb-4"></div>
           <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
@@ -72,7 +72,7 @@ const OwnerCard = () => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center w-full max-w-md mx-auto">
+      <div className="flex flex-col items-center text-center w-full">
         <p className="text-red-600">{error}</p>
         {/* Optionally, add a login button */}
       </div>
@@ -80,7 +80,7 @@ const OwnerCard = () => {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center w-full max-w-md mx-auto">
+    <div className="flex flex-col items-center text-center w-full">
       <Image
         src="/assets/images/profile/top-profile/Frame_1171275857.png"
         alt="Pet Owner Avatar"
