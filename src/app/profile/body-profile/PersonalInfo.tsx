@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
-import { getProfile, updateProfile } from "@/services/profileService";
+import { supabase } from "@/utils/supabase/client";
 
 function PersonalInfo() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -12,10 +12,49 @@ function PersonalInfo() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-        const data = await getProfile(userId);
-        setProfile(data);
-        setFormData(data);
+        // Get current user from Supabase auth
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          // Fetch profile from Supabase profiles table
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching profile:", error);
+            // Fallback to user metadata
+            const fallbackProfile: Profile = {
+              name: user.user_metadata.full_name || user.email || "User",
+              user_id: user.id,
+              telephone_number: user.user_metadata.phone_number || "N/A",
+              email: user.email || "N/A",
+              created_at: user.created_at || "N/A",
+              birth_date: user.user_metadata.birth_date || "N/A",
+              address: user.user_metadata.address || "N/A",
+            };
+            setProfile(fallbackProfile);
+            setFormData(fallbackProfile);
+          } else {
+            const profileData: Profile = {
+              name: data.full_name || user.user_metadata.full_name || "User",
+              user_id: user.id,
+              telephone_number:
+                data.phone_number || user.user_metadata.phone_number || "N/A",
+              email: user.email || "N/A",
+              created_at: user.created_at || "N/A",
+              birth_date:
+                data.birth_date || user.user_metadata.birth_date || "N/A",
+              address: data.address || user.user_metadata.address || "N/A",
+            };
+            setProfile(profileData);
+            setFormData(profileData);
+          }
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
@@ -79,9 +118,47 @@ function PersonalInfo() {
     e.preventDefault();
     console.log("Submitting formData:", formData);
     setIsEditing(false);
-    const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-    const updated = await updateProfile(userId, formData);
-    setProfile(updated);
+
+    try {
+      // Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        // Update profile in Supabase
+        const { data, error } = await supabase
+          .from("profiles")
+          .update({
+            full_name: formData.name,
+            phone_number: formData.telephone_number,
+            birth_date: formData.birth_date,
+            address: formData.address,
+          })
+          .eq("id", user.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Error updating profile:", error);
+        } else {
+          // Update local state
+          const updatedProfile: Profile = {
+            name: data.full_name || formData.name || "User",
+            user_id: user.id,
+            telephone_number:
+              data.phone_number || formData.telephone_number || "N/A",
+            email: user.email || "N/A",
+            created_at: user.created_at || "N/A",
+            birth_date: data.birth_date || formData.birth_date || "N/A",
+            address: data.address || formData.address || "N/A",
+          };
+          setProfile(updatedProfile);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   return (

@@ -38,7 +38,7 @@ const OwnerCard = () => {
           // Fallback to user metadata if profile table fails
           setProfile({
             full_name: user.user_metadata.full_name || user.email || "User",
-            phone_number: user.user_metadata.phone_number || "N/A"
+            phone_number: user.user_metadata.phone_number || "N/A",
           });
         } else {
           setProfile(data);
