@@ -190,7 +190,17 @@ const Calendar = () => {
 
       <div className="mt-8 flex justify-center">
         <button
-          onClick={() => router.push("/reservation/my-bookings")}
+          onClick={() => {
+            const token =
+              localStorage.getItem("accessToken") ||
+              localStorage.getItem("token");
+            if (!token) {
+              // Redirect to login page
+              window.location.href = "/auth/login";
+              return;
+            }
+            router.push("/reservation/my-bookings");
+          }}
           className="bg-[#FBE08C] text-black font-bold py-3 px-8 rounded-2xl hover:bg-amber-400 transition-transform transform hover:scale-105"
         >
           การจองของฉัน

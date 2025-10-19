@@ -2,7 +2,10 @@ import { API_BASE } from "@/config/api";
 
 function getToken(): string {
   if (typeof window === "undefined") return "";
-  return localStorage.getItem("accessToken") || "";
+  // Support both keys to be backward-compatible
+  return (
+    localStorage.getItem("accessToken") || localStorage.getItem("token") || ""
+  );
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -19,6 +22,28 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     body: init.body,
     cache: "no-store",
   });
+
+  // Debug logs for easier diagnosis (safe to keep in dev/preview)
+  try {
+    // Avoid logging full token; show only prefix
+    const masked = token ? `${token.slice(0, 8)}…` : "<empty>";
+    // eslint-disable-next-line no-console
+    console.log("apiFetch →", { url, auth: token ? `Bearer ${masked}` : "none" });
+  } catch {}
+
+  // Handle auth failures: clear token and redirect to login on client
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("role");
+      // eslint-disable-next-line no-console
+      console.warn("หมดเวลาเข้าสู่ระบบ กรุณา login ใหม่");
+      alert("หมดเวลาเข้าสู่ระบบ กรุณา login ใหม่");
+      window.location.href = "/auth/login";
+    }
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");

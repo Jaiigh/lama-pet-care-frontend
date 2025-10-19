@@ -20,10 +20,17 @@ const OwnerCard = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("accessToken") ||
+              localStorage.getItem("token")
+            : null;
         if (!token) {
           setError("กรุณาเข้าสู่ระบบก่อน");
           setLoading(false);
+          if (typeof window !== "undefined") {
+            window.location.href = "/auth/login";
+          }
           return;
         }
 
