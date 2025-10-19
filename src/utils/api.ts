@@ -27,7 +27,6 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   try {
     // Avoid logging full token; show only prefix
     const masked = token ? `${token.slice(0, 8)}…` : "<empty>";
-    // eslint-disable-next-line no-console
     console.log("apiFetch →", { url, auth: token ? `Bearer ${masked}` : "none" });
   } catch {}
 
@@ -38,7 +37,6 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
       localStorage.removeItem("token");
       localStorage.removeItem("user_id");
       localStorage.removeItem("role");
-      // eslint-disable-next-line no-console
       console.warn("หมดเวลาเข้าสู่ระบบ กรุณา login ใหม่");
       alert("หมดเวลาเข้าสู่ระบบ กรุณา login ใหม่");
       window.location.href = "/auth/login";
