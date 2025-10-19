@@ -1,4 +1,4 @@
 export const environment = {
-  masterUrl: "https://lama-pet-care-backend-dev.onrender.com/",
+  masterUrl: "https://lama-pet-care-backend-dev.onrender.com/api/v1",
 };
 //bruh

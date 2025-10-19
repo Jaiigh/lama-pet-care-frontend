@@ -1,0 +1,203 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import dayjs from "dayjs";
+import "dayjs/locale/th";
+import buddhistEra from "dayjs/plugin/buddhistEra";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { formatToThaiBuddhistDate, thaiDayShortNames } from "@/utils/thaiDate";
+import { supabase } from "@/utils/supabase/client";
+import CalendarDay from "@/app/reservation/components/CalendarDay";
+import { DayInfo } from "@/interfaces/profileInterface";
+
+dayjs.extend(buddhistEra);
+dayjs.locale("th");
+
+import { User } from "@supabase/supabase-js";
+
+dayjs.extend(buddhistEra);
+dayjs.locale("th");
+
+const Calendar = () => {
+  const router = useRouter();
+  const [currentMonth, setCurrentMonth] = useState(dayjs());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [bookings, setBookings] = useState<{
+    [key: string]: { hasBooking?: boolean; badges?: string[] };
+  }>({});
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUserAndBookings = async () => {
+      // 1. Fetch the current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+
+      if (!user) {
+        setBookings({}); // Clear bookings if no user is logged in
+        return;
+      }
+
+      // 2. Fetch bookings for the logged-in user
+      const startOfMonth = currentMonth.startOf("month").format("YYYY-MM-DD");
+      const endOfMonth = currentMonth.endOf("month").format("YYYY-MM-DD");
+
+      const { data, error } = await supabase
+        .from("reservations")
+        .select("date, services ( name )")
+        .eq("user_id", user.id) // Filter by the logged-in user's ID
+        .gte("date", startOfMonth)
+        .lte("date", endOfMonth);
+
+      if (error) {
+        console.error("Supabase error message:", error.message);
+        console.error("Supabase error details:", error.details);
+        console.error("Supabase error hint:", error.hint);
+        console.error("Full error object:", error);
+        return;
+      }
+
+      const formattedBookings = data.reduce((acc, booking) => {
+        const date = dayjs(booking.date).format("YYYY-MM-DD");
+        if (!acc[date]) {
+          acc[date] = { hasBooking: true, badges: [] };
+        }
+
+        const services = booking.services as unknown;
+
+        if (
+          Array.isArray(services) &&
+          services.length > 0 &&
+          services[0].name
+        ) {
+          acc[date].badges?.push(services[0].name.charAt(0).toUpperCase());
+        } else if (
+          services &&
+          typeof services === "object" &&
+          "name" in services
+        ) {
+          const service = services as { name: string };
+          if (service.name) {
+            acc[date].badges?.push(service.name.charAt(0).toUpperCase());
+          }
+        }
+        return acc;
+      }, {} as { [key: string]: { hasBooking?: boolean; badges?: string[] } });
+
+      setBookings(formattedBookings);
+    };
+
+    fetchUserAndBookings();
+  }, [currentMonth]);
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    router.push(`/reservation/time?date=${date}`);
+  };
+
+  const generateCalendarGrid = (): (DayInfo | null)[] => {
+    const today = dayjs();
+    const startOfMonth = currentMonth.startOf("month");
+    const endOfMonth = currentMonth.endOf("month");
+    const daysInMonth = endOfMonth.date();
+    const startDayOfWeek = startOfMonth.day();
+
+    const grid: (DayInfo | null)[] = [];
+
+    for (let i = 0; i < startDayOfWeek; i++) {
+      grid.push(null);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = currentMonth.date(day);
+      const dateString = date.format("YYYY-MM-DD");
+      const bookingInfo = bookings[dateString];
+
+      grid.push({
+        date: dateString,
+        dayOfMonth: day,
+        isToday: date.isSame(today, "day"),
+        isSelected: dateString === selectedDate,
+        hasBooking: bookingInfo?.hasBooking || false,
+        badges: bookingInfo?.badges || [],
+        isDisabled: date.isBefore(today, "day"),
+      });
+    }
+
+    return grid;
+  };
+
+  const calendarGrid = generateCalendarGrid();
+
+  const goToPreviousMonth = () => {
+    setCurrentMonth(currentMonth.subtract(1, "month"));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentMonth(currentMonth.add(1, "month"));
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg w-full max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+          เลือกวันที่
+        </h2>
+        <div className="flex items-center space-x-2 md:space-x-4">
+          <button
+            onClick={goToPreviousMonth}
+            className="p-2 rounded-full hover:bg-[#FBE08C] transition-colors"
+            aria-label="เดือนก่อนหน้า"
+          >
+            <ChevronLeft size={20} className="text-gray-600" />
+          </button>
+          <span className="text-base md:text-lg lg:text-xl font-semibold text-gray-700 w-32 md:w-40 lg:w-48 text-center">
+            {formatToThaiBuddhistDate(currentMonth)}
+          </span>
+          <button
+            onClick={goToNextMonth}
+            className="p-2 rounded-full hover:bg-[#FBE08C] transition-colors"
+            aria-label="เดือนถัดไป"
+          >
+            <ChevronRight size={20} className="text-gray-800" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-2 md:gap-3 lg:gap-4 text-center">
+        {thaiDayShortNames.map((day: string) => (
+          <div
+            key={day}
+            className="font-medium text-sm md:text-base lg:text-lg text-gray-500 py-2 md:py-3"
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-2 md:gap-3 lg:gap-4">
+        {calendarGrid.map((dayInfo, index) => (
+          <CalendarDay
+            key={dayInfo ? dayInfo.date : `empty-${index}`}
+            dayInfo={dayInfo}
+            onDateSelect={handleDateSelect}
+          />
+        ))}
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <button
+          onClick={() => router.push("/reservation/my-bookings")}
+          className="bg-[#FBE08C] text-black font-bold py-3 px-8 rounded-2xl hover:bg-amber-400 transition-transform transform hover:scale-105"
+        >
+          การจองของฉัน
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Calendar;

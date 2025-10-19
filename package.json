@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.1",
+    "@types/react-router-dom": "^5.3.3",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.18",
     "framer-motion": "^12.23.12",
     "geist": "^1.4.2",
     "lucide-react": "^0.540.0",
-    "@types/react-router-dom": "^5.3.3",
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
