@@ -7,12 +7,12 @@ import Calendar from "@/app/reservation/components/Calendar";
 const ReservationPage = () => {
   return (
     <div className="bg-[#EBF8F4] min-h-screen">
-      <main className="mx-auto py-24 px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-          <div className="lg:col-span-4">
+      <main className="max-w-6xl mx-auto py-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="md:col-span-4">
             <OwnerCard />
           </div>
-          <div className="lg:col-span-8">
+          <div className="md:col-span-8">
             <Calendar />
           </div>
         </div>

@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "Pet care management platform",
 };
 
+import { RoleProvider } from '@/context/RoleContext';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,8 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${plusJakartaSans.variable} antialiased`}>
-        <Header />
-        {children}
+        <RoleProvider>
+          <Header />
+          {children}
+        </RoleProvider>
       </body>
     </html>
   );

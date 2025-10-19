@@ -35,6 +35,11 @@ const OwnerCard = () => {
 
         if (error) {
           console.error("Error fetching profile:", error);
+          // Fallback to user metadata if profile table fails
+          setProfile({
+            full_name: user.user_metadata.full_name || user.email || "User",
+            phone_number: user.user_metadata.phone_number || "N/A"
+          });
         } else {
           setProfile(data);
         }
@@ -84,18 +89,18 @@ const OwnerCard = () => {
       />
       <p className="text-gray-600">Pet Owner</p>
       <h3 className="text-2xl font-bold text-gray-800 mt-1 mb-6">
-        {profile?.full_name || "N/A"}
+        {profile?.full_name || user.user_metadata.full_name || "N/A"}
       </h3>
 
       <div className="space-y-4 text-left">
         <div className="flex items-center">
           <CreditCard className="w-5 h-5 text-gray-700 mr-3" />
-          <span className="text-gray-800">{user.id.substring(0, 8)}...</span>
+          <span className="text-gray-800">{user.email}</span>
         </div>
         <div className="flex items-center">
           <Phone className="w-5 h-5 text-gray-700 mr-3" />
           <span className="text-gray-800">
-            {profile?.phone_number || "N/A"}
+            {profile?.phone_number || user.user_metadata.phone_number || "N/A"}
           </span>
         </div>
       </div>

@@ -2,17 +2,17 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
-type Role = "pet-owner" | "caretaker" | "doctor";
+export type UserRole = "pet owner" | "caretaker" | "doctor";
 
 interface RoleContextType {
-  role: Role;
-  setRole: (role: Role) => void;
+  role: UserRole;
+  setRole: (role: UserRole) => void;
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
-  const [role, setRole] = useState<Role>("pet-owner");
+  const [role, setRole] = useState<UserRole>("pet owner"); // Default role
 
   return (
     <RoleContext.Provider value={{ role, setRole }}>

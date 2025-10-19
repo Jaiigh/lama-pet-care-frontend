@@ -26,7 +26,7 @@ const Calendar = () => {
   const [bookings, setBookings] = useState<{
     [key: string]: { hasBooking?: boolean; badges?: string[] };
   }>({});
-  const [user, setUser] = useState<User | null>(null);
+  const [, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUserAndBookings = async () => {
