@@ -1,7 +1,7 @@
 import { environment } from "@/env/environment";
 
-const loginURL = environment.masterUrl + "auth/login/";
-const checkTokenURL = environment.masterUrl + "auth/check_token";
+const loginURL = environment.masterUrl + environment.APIversion + "auth/login/";
+const checkTokenURL = environment.masterUrl + environment.APIversion + "auth/check_token";
 
 export interface LoginResponse {
     token: string;
