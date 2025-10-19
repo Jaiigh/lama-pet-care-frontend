@@ -7,17 +7,22 @@ import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatToThaiBuddhistDate, thaiDayShortNames } from "@/utils/thaiDate";
-import { supabase } from "@/utils/supabase/client";
+import { apiFetch } from "@/utils/api";
 import CalendarDay from "@/app/reservation/components/CalendarDay";
 import { DayInfo } from "@/interfaces/profileInterface";
 
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
-import { User } from "@supabase/supabase-js";
+interface Booking {
+  date: string;
+  service_name?: string;
+  services?: Array<{ name: string }> | { name: string };
+}
 
-dayjs.extend(buddhistEra);
-dayjs.locale("th");
+interface BookingsResponse {
+  bookings: Booking[];
+}
 
 const Calendar = () => {
   const router = useRouter();
@@ -26,71 +31,69 @@ const Calendar = () => {
   const [bookings, setBookings] = useState<{
     [key: string]: { hasBooking?: boolean; badges?: string[] };
   }>({});
-  const [, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchUserAndBookings = async () => {
-      // 1. Fetch the current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
+    const fetchBookings = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
 
-      if (!user) {
-        setBookings({}); // Clear bookings if no user is logged in
-        return;
-      }
-
-      // 2. Fetch bookings for the logged-in user
-      const startOfMonth = currentMonth.startOf("month").format("YYYY-MM-DD");
-      const endOfMonth = currentMonth.endOf("month").format("YYYY-MM-DD");
-
-      const { data, error } = await supabase
-        .from("reservations")
-        .select("date, services ( name )")
-        .eq("user_id", user.id) // Filter by the logged-in user's ID
-        .gte("date", startOfMonth)
-        .lte("date", endOfMonth);
-
-      if (error) {
-        console.error("Supabase error message:", error.message);
-        console.error("Supabase error details:", error.details);
-        console.error("Supabase error hint:", error.hint);
-        console.error("Full error object:", error);
-        return;
-      }
-
-      const formattedBookings = data.reduce((acc, booking) => {
-        const date = dayjs(booking.date).format("YYYY-MM-DD");
-        if (!acc[date]) {
-          acc[date] = { hasBooking: true, badges: [] };
+        if (!token) {
+          setBookings({}); // Clear bookings if no user is logged in
+          return;
         }
 
-        const services = booking.services as unknown;
+        // Fetch bookings for the logged-in user for current month
+        const startOfMonth = currentMonth.startOf("month").format("YYYY-MM-DD");
+        const endOfMonth = currentMonth.endOf("month").format("YYYY-MM-DD");
 
-        if (
-          Array.isArray(services) &&
-          services.length > 0 &&
-          services[0].name
-        ) {
-          acc[date].badges?.push(services[0].name.charAt(0).toUpperCase());
-        } else if (
-          services &&
-          typeof services === "object" &&
-          "name" in services
-        ) {
-          const service = services as { name: string };
-          if (service.name) {
-            acc[date].badges?.push(service.name.charAt(0).toUpperCase());
+        const data = await apiFetch<BookingsResponse>(
+          `/bookings?start_date=${startOfMonth}&end_date=${endOfMonth}`
+        );
+
+        if (!data || !data.bookings) {
+          setBookings({});
+          return;
+        }
+
+        const formattedBookings = data.bookings.reduce((acc, booking) => {
+          const date = dayjs(booking.date).format("YYYY-MM-DD");
+          if (!acc[date]) {
+            acc[date] = { hasBooking: true, badges: [] };
           }
-        }
-        return acc;
-      }, {} as { [key: string]: { hasBooking?: boolean; badges?: string[] } });
 
-      setBookings(formattedBookings);
+          // Handle different service response formats
+          let serviceName = "";
+
+          if (booking.service_name) {
+            serviceName = booking.service_name;
+          } else if (
+            Array.isArray(booking.services) &&
+            booking.services.length > 0
+          ) {
+            serviceName = booking.services[0].name;
+          } else if (
+            booking.services &&
+            typeof booking.services === "object" &&
+            "name" in booking.services
+          ) {
+            serviceName = (booking.services as { name: string }).name;
+          }
+
+          if (serviceName) {
+            acc[date].badges?.push(serviceName.charAt(0).toUpperCase());
+          }
+
+          return acc;
+        }, {} as { [key: string]: { hasBooking?: boolean; badges?: string[] } });
+
+        setBookings(formattedBookings);
+      } catch (error: unknown) {
+        console.error("Failed to fetch bookings:", error);
+        setBookings({});
+      }
     };
 
-    fetchUserAndBookings();
+    fetchBookings();
   }, [currentMonth]);
 
   const handleDateSelect = (date: string) => {

@@ -1,16 +1,21 @@
-import { Reservation , ReservationApiResponse } from "@/interfaces/reservationInterface";
+import {
+  Reservation,
+  ReservationApiResponse,
+} from "@/interfaces/reservationInterface";
 
 import { environment } from "@/env/environment";
 
-const reservationURL = environment.masterUrl + environment.APIversion + "services/";
+const reservationURL = environment.masterUrl + "/services/";
 
-export const getReservation = async (token: string | null): Promise<ReservationApiResponse> => {
+export const getReservation = async (
+  token: string | null
+): Promise<ReservationApiResponse> => {
   try {
     const response = await fetch(reservationURL, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     if (!response.ok) {
