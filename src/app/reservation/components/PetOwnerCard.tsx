@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Logo from "@/images/lamalogo.png";
-import { supabase } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { getUser } from "@/utils/api";
 
 interface Profile {
   name: string;
@@ -13,41 +12,22 @@ interface Profile {
 
 const PetOwnerCard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Get current user first
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setUser(user);
-
-        if (user) {
-          // Fetch profile from Supabase profiles table
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("full_name, phone_number")
-            .eq("id", user.id)
-            .single();
-
-          if (error) {
-            console.error("Error fetching profile:", error);
-            // Fallback to user metadata
-            setProfile({
-              name: user.user_metadata.full_name || user.email || "User",
-              telephone_number: user.user_metadata.phone_number || "N/A",
-            });
-          } else {
-            setProfile({
-              name: data.full_name || user.user_metadata.full_name || "User",
-              telephone_number:
-                data.phone_number || user.user_metadata.phone_number || "N/A",
-            });
-          }
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.error("กรุณาเข้าสู่ระบบก่อน");
+          return;
         }
-      } catch (error) {
+
+        const data = await getUser();
+        setProfile({
+          name: data.name || data.full_name || "User",
+          telephone_number: data.telephone_number || data.phone_number || "N/A",
+        });
+      } catch (error: unknown) {
         console.error("Error fetching profile:", error);
       }
     };

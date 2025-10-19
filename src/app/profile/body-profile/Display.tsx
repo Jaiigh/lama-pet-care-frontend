@@ -5,7 +5,7 @@ import Logo from "@/images/empty-avatar.png";
 
 import { useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
-import { supabase } from "@/utils/supabase/client";
+import { getUser } from "@/utils/api";
 
 function Display() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -13,47 +13,23 @@ function Display() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Get current user from Supabase auth
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          // Fetch profile from Supabase profiles table
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-
-          if (error) {
-            console.error("Error fetching profile:", error);
-            // Fallback to user metadata
-            const fallbackProfile: Profile = {
-              name: user.user_metadata.full_name || user.email || "User",
-              user_id: user.id,
-              telephone_number: user.user_metadata.phone_number || "N/A",
-              email: user.email || "N/A",
-              created_at: user.created_at || "N/A",
-              birth_date: user.user_metadata.birth_date || "N/A",
-              address: user.user_metadata.address || "N/A",
-            };
-            setProfile(fallbackProfile);
-          } else {
-            const profileData: Profile = {
-              name: data.full_name || user.user_metadata.full_name || "User",
-              user_id: user.id,
-              telephone_number:
-                data.phone_number || user.user_metadata.phone_number || "N/A",
-              email: user.email || "N/A",
-              created_at: user.created_at || "N/A",
-              birth_date:
-                data.birth_date || user.user_metadata.birth_date || "N/A",
-              address: data.address || user.user_metadata.address || "N/A",
-            };
-            setProfile(profileData);
-          }
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.error("กรุณาเข้าสู่ระบบก่อน");
+          return;
         }
+
+        const data = await getUser();
+        const profileData: Profile = {
+          name: data.name || data.full_name || "User",
+          user_id: data.user_id || "N/A",
+          telephone_number: data.telephone_number || data.phone_number || "N/A",
+          email: data.email || "N/A",
+          created_at: data.created_at || "N/A",
+          birth_date: data.birth_date || "N/A",
+          address: data.address || "N/A",
+        };
+        setProfile(profileData);
       } catch (error) {
         console.error("Error fetching profile:", error);
       }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
-import { supabase } from "@/utils/supabase/client";
+import { getUser, apiFetch } from "@/utils/api";
 
 function PersonalInfo() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -12,49 +12,24 @@ function PersonalInfo() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Get current user from Supabase auth
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          // Fetch profile from Supabase profiles table
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-
-          if (error) {
-            console.error("Error fetching profile:", error);
-            // Fallback to user metadata
-            const fallbackProfile: Profile = {
-              name: user.user_metadata.full_name || user.email || "User",
-              user_id: user.id,
-              telephone_number: user.user_metadata.phone_number || "N/A",
-              email: user.email || "N/A",
-              created_at: user.created_at || "N/A",
-              birth_date: user.user_metadata.birth_date || "N/A",
-              address: user.user_metadata.address || "N/A",
-            };
-            setProfile(fallbackProfile);
-            setFormData(fallbackProfile);
-          } else {
-            const profileData: Profile = {
-              name: data.full_name || user.user_metadata.full_name || "User",
-              user_id: user.id,
-              telephone_number:
-                data.phone_number || user.user_metadata.phone_number || "N/A",
-              email: user.email || "N/A",
-              created_at: user.created_at || "N/A",
-              birth_date:
-                data.birth_date || user.user_metadata.birth_date || "N/A",
-              address: data.address || user.user_metadata.address || "N/A",
-            };
-            setProfile(profileData);
-            setFormData(profileData);
-          }
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.error("กรุณาเข้าสู่ระบบก่อน");
+          return;
         }
+
+        const data = await getUser();
+        const profileData: Profile = {
+          name: data.name || data.full_name || "User",
+          user_id: data.user_id || "N/A",
+          telephone_number: data.telephone_number || data.phone_number || "N/A",
+          email: data.email || "N/A",
+          created_at: data.created_at || "N/A",
+          birth_date: data.birth_date || "N/A",
+          address: data.address || "N/A",
+        };
+        setProfile(profileData);
+        setFormData(profileData);
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
@@ -120,42 +95,49 @@ function PersonalInfo() {
     setIsEditing(false);
 
     try {
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        // Update profile in Supabase
-        const { data, error } = await supabase
-          .from("profiles")
-          .update({
-            full_name: formData.name,
-            phone_number: formData.telephone_number,
-            birth_date: formData.birth_date,
-            address: formData.address,
-          })
-          .eq("id", user.id)
-          .select()
-          .single();
-
-        if (error) {
-          console.error("Error updating profile:", error);
-        } else {
-          // Update local state
-          const updatedProfile: Profile = {
-            name: data.full_name || formData.name || "User",
-            user_id: user.id,
-            telephone_number:
-              data.phone_number || formData.telephone_number || "N/A",
-            email: user.email || "N/A",
-            created_at: user.created_at || "N/A",
-            birth_date: data.birth_date || formData.birth_date || "N/A",
-            address: data.address || formData.address || "N/A",
-          };
-          setProfile(updatedProfile);
-        }
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error("กรุณาเข้าสู่ระบบก่อน");
+        return;
       }
+
+      // Update profile via backend API
+      const updatedData = await apiFetch<{
+        name?: string;
+        full_name?: string;
+        user_id?: string;
+        telephone_number?: string;
+        phone_number?: string;
+        email?: string;
+        created_at?: string;
+        birth_date?: string;
+        address?: string;
+      }>("/user/", {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: formData.name,
+          telephone_number: formData.telephone_number,
+          birth_date: formData.birth_date,
+          address: formData.address,
+        }),
+      });
+
+      // Update local state
+      const updatedProfile: Profile = {
+        name:
+          updatedData.name || updatedData.full_name || formData.name || "User",
+        user_id: updatedData.user_id || "N/A",
+        telephone_number:
+          updatedData.telephone_number ||
+          updatedData.phone_number ||
+          formData.telephone_number ||
+          "N/A",
+        email: updatedData.email || "N/A",
+        created_at: updatedData.created_at || "N/A",
+        birth_date: updatedData.birth_date || formData.birth_date || "N/A",
+        address: updatedData.address || formData.address || "N/A",
+      };
+      setProfile(updatedProfile);
     } catch (error) {
       console.error("Error updating profile:", error);
     }

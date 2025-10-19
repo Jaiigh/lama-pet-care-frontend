@@ -3,51 +3,48 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { CreditCard, Phone } from "lucide-react";
-import { supabase } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { getUser } from "@/utils/api";
 
 interface Profile {
   full_name: string;
   phone_number: string;
+  email: string;
   // Add other profile fields as needed
 }
 
 const OwnerCard = () => {
-  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const fetchUserAndProfile = async () => {
-      // 1. Fetch the current user from Supabase auth
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-
-      if (user) {
-        // 2. Fetch the user's profile from the 'profiles' table
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("full_name, phone_number")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-          // Fallback to user metadata if profile table fails
-          setProfile({
-            full_name: user.user_metadata.full_name || user.email || "User",
-            phone_number: user.user_metadata.phone_number || "N/A",
-          });
-        } else {
-          setProfile(data);
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          setError("กรุณาเข้าสู่ระบบก่อน");
+          setLoading(false);
+          return;
         }
+
+        setError("");
+        const data = await getUser();
+        setProfile({
+          full_name: data.full_name || data.name || "User",
+          phone_number: data.phone_number || data.telephone_number || "N/A",
+          email: data.email || "N/A",
+        });
+      } catch (error: unknown) {
+        console.error("Error fetching profile:", error);
+        setError(
+          error instanceof Error ? error.message : "โหลดโปรไฟล์ไม่สำเร็จ"
+        );
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    fetchUserAndProfile();
+    fetchProfile();
   }, []);
 
   if (loading) {
@@ -66,10 +63,10 @@ const OwnerCard = () => {
     );
   }
 
-  if (!user) {
+  if (error) {
     return (
       <div className="bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center w-full max-w-md mx-auto">
-        <p className="text-gray-600">กรุณาเข้าสู่ระบบเพื่อดูข้อมูล</p>
+        <p className="text-red-600">{error}</p>
         {/* Optionally, add a login button */}
       </div>
     );
@@ -78,10 +75,7 @@ const OwnerCard = () => {
   return (
     <div className="bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center w-full max-w-md mx-auto">
       <Image
-        src={
-          user.user_metadata.avatar_url ||
-          "/assets/images/profile/top-profile/Frame_1171275857.png"
-        }
+        src="/assets/images/profile/top-profile/Frame_1171275857.png"
         alt="Pet Owner Avatar"
         width={72}
         height={72}
@@ -89,18 +83,18 @@ const OwnerCard = () => {
       />
       <p className="text-gray-600">Pet Owner</p>
       <h3 className="text-2xl font-bold text-gray-800 mt-1 mb-6">
-        {profile?.full_name || user.user_metadata.full_name || "N/A"}
+        {profile?.full_name || "N/A"}
       </h3>
 
       <div className="space-y-4 text-left">
         <div className="flex items-center">
           <CreditCard className="w-5 h-5 text-gray-700 mr-3" />
-          <span className="text-gray-800">{user.email}</span>
+          <span className="text-gray-800">{profile?.email || "N/A"}</span>
         </div>
         <div className="flex items-center">
           <Phone className="w-5 h-5 text-gray-700 mr-3" />
           <span className="text-gray-800">
-            {profile?.phone_number || user.user_metadata.phone_number || "N/A"}
+            {profile?.phone_number || "N/A"}
           </span>
         </div>
       </div>
