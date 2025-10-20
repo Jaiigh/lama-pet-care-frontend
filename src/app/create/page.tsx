@@ -1,7 +1,6 @@
 "use client";
-import PetOwnerCardSection from "../section/PetOwnerCardSection";
-import ReservationCreateSection from "../section/ReservationCreateSection";
-
+import ReservationCreateSection from "../reservation/section/ReservationCreateSection";
+import PetOwnerCardSection from "../reservation/section/PetOwnerCardSection";
 export default function Home() {
   return (
     <div className="min-h-screen flex justify-center bg-[#EBF8F4] p-8">

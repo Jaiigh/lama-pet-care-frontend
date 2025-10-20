@@ -1,7 +1,6 @@
 "use client";
-import CalendarSection from "../section/CalendarSection";
-import PetOwnerCardSection from "../section/PetOwnerCardSection";
-
+import CalendarSection from "./section/CalendarSection";
+import PetOwnerCardSection from "./section/PetOwnerCardSection";
 export default function Home() {
   return (
     <div className="min-h-screen flex justify-center bg-[#EBF8F4] p-8">
