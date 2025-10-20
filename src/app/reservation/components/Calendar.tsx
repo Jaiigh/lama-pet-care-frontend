@@ -1,100 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatToThaiBuddhistDate, thaiDayShortNames } from "@/utils/thaiDate";
-import { apiFetch } from "@/utils/api";
 import CalendarDay from "@/app/reservation/components/CalendarDay";
 import { DayInfo } from "@/interfaces/profileInterface";
 
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
-interface Booking {
-  date: string;
-  service_name?: string;
-  services?: Array<{ name: string }> | { name: string };
-}
-
-interface BookingsResponse {
-  bookings: Booking[];
-}
-
 const Calendar = () => {
   const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [bookings, setBookings] = useState<{
-    [key: string]: { hasBooking?: boolean; badges?: string[] };
-  }>({});
-
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-
-        if (!token) {
-          setBookings({}); // Clear bookings if no user is logged in
-          return;
-        }
-
-        // Fetch bookings for the logged-in user for current month
-        const startOfMonth = currentMonth.startOf("month").format("YYYY-MM-DD");
-        const endOfMonth = currentMonth.endOf("month").format("YYYY-MM-DD");
-
-        const data = await apiFetch<BookingsResponse>(
-          `/bookings?start_date=${startOfMonth}&end_date=${endOfMonth}`
-        );
-
-        if (!data || !data.bookings) {
-          setBookings({});
-          return;
-        }
-
-        const formattedBookings = data.bookings.reduce((acc, booking) => {
-          const date = dayjs(booking.date).format("YYYY-MM-DD");
-          if (!acc[date]) {
-            acc[date] = { hasBooking: true, badges: [] };
-          }
-
-          // Handle different service response formats
-          let serviceName = "";
-
-          if (booking.service_name) {
-            serviceName = booking.service_name;
-          } else if (
-            Array.isArray(booking.services) &&
-            booking.services.length > 0
-          ) {
-            serviceName = booking.services[0].name;
-          } else if (
-            booking.services &&
-            typeof booking.services === "object" &&
-            "name" in booking.services
-          ) {
-            serviceName = (booking.services as { name: string }).name;
-          }
-
-          if (serviceName) {
-            acc[date].badges?.push(serviceName.charAt(0).toUpperCase());
-          }
-
-          return acc;
-        }, {} as { [key: string]: { hasBooking?: boolean; badges?: string[] } });
-
-        setBookings(formattedBookings);
-      } catch (error: unknown) {
-        console.error("Failed to fetch bookings:", error);
-        setBookings({});
-      }
-    };
-
-    fetchBookings();
-  }, [currentMonth]);
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
@@ -117,15 +39,14 @@ const Calendar = () => {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = currentMonth.date(day);
       const dateString = date.format("YYYY-MM-DD");
-      const bookingInfo = bookings[dateString];
 
       grid.push({
         date: dateString,
         dayOfMonth: day,
         isToday: date.isSame(today, "day"),
         isSelected: dateString === selectedDate,
-        hasBooking: bookingInfo?.hasBooking || false,
-        badges: bookingInfo?.badges || [],
+        hasBooking: false,
+        badges: [],
         isDisabled: date.isBefore(today, "day"),
       });
     }
