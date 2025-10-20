@@ -7,3 +7,13 @@ export interface Profile {
   birth_date: string;
   address: string;
 }
+
+export interface DayInfo {
+  date: string;
+  dayOfMonth: number;
+  isToday: boolean;
+  isSelected: boolean;
+  hasBooking: boolean;
+  badges: string[];
+  isDisabled: boolean;
+}

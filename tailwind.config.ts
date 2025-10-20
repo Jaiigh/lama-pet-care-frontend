@@ -22,5 +22,10 @@ export default {
         lg: "80px",
       },
     },
+    extend: {
+      fontFamily: {
+        sans: ["var(--font-plus-jakarta-sans)", "sans-serif"],
+      },
+    },
   },
 } satisfies Config;

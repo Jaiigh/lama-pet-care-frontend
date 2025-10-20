@@ -1,4 +1,4 @@
 export const environment = {
-  masterUrl: "http://localhost:8080/api/v1", // Update this with your actual backend URL
-  production: false,
+  masterUrl: process.env.NEXT_PUBLIC_API_BASE || "https://lama-pet-care-backend-dev.onrender.com/api/v1",
+  production: process.env.NODE_ENV === "production",
 };
