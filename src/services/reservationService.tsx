@@ -1,5 +1,4 @@
 import {
-  Reservation,
   ReservationApiResponse,
 } from "@/interfaces/reservationInterface";
 
