@@ -1,6 +1,6 @@
 "use client";
+import CalendarSection from "../section/CalendarSection";
 import PetOwnerCardSection from "../section/PetOwnerCardSection";
-import ReservationCreateSection from "./section/ReservationCreateSection";
 
 export default function Home() {
   return (
@@ -17,7 +17,7 @@ export default function Home() {
 
           {/* ด้านขวา */}
           <div className="w-full md:w-3/5 p-8">
-            <ReservationCreateSection/>
+            <CalendarSection/>
           </div>
         </div>
       </div>

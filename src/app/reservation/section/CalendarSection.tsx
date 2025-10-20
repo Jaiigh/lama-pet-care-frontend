@@ -34,7 +34,7 @@ const Calendar = () => {
     
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
-    router.push(`/reservation/time?date=${date}`);
+    router.push(`/reservation/create?date=${date}`);
   };
 
   const generateCalendarGrid = (): (DayInfo | null)[] => {
