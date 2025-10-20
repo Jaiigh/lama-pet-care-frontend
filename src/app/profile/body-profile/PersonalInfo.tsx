@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
-import { getUser, apiFetch } from "@/utils/api";
+import { getProfile } from "@/services/profileService";
 
 function PersonalInfo() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -18,11 +18,11 @@ function PersonalInfo() {
           return;
         }
 
-        const data = await getUser();
+        const data = await getProfile();
         const profileData: Profile = {
-          name: data.name || data.full_name || "User",
+          name: data.name ||  "User",
           user_id: data.user_id || "N/A",
-          telephone_number: data.telephone_number || data.phone_number || "N/A",
+          telephone_number: data.telephone_number  || "N/A",
           email: data.email || "N/A",
           created_at: data.created_at || "N/A",
           birth_date: data.birth_date || "N/A",
