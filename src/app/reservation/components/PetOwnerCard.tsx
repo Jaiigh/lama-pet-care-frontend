@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import Logo from "@/images/lamalogo.png";
-import { getUser } from "@/utils/api";
+import Logo from "@/images/empty-avatar.png";
+import { getProfile } from "@/services/profileService"; 
 
 interface Profile {
   name: string;
@@ -22,10 +22,10 @@ const PetOwnerCard = () => {
           return;
         }
 
-        const data = await getUser();
+        const data = await getProfile();
         setProfile({
-          name: data.name || data.full_name || "User",
-          telephone_number: data.telephone_number || data.phone_number || "N/A",
+          name: data.name || "User",
+          telephone_number: data.telephone_number || "N/A",
         });
       } catch (error: unknown) {
         console.error("Error fetching profile:", error);
