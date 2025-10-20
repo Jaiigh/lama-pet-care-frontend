@@ -18,7 +18,7 @@ export const CallToAction = () => {
 
   useEffect(() => {
     scrollYProgress.on("change", (value) => console.log("value", value));
-  }, []);
+  }, [scrollYProgress]);
 
   const translateY = useTransform(scrollYProgress, [0, 1], [40, -40]);
   return (

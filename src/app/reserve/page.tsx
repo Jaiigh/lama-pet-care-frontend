@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Reservation, ReservationApiResponse } from "@/interfaces/reservationInterface";
 import { getReservation } from "@/services/reservationService";
 
