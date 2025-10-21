@@ -62,10 +62,14 @@ export default function LoginForm() {
       // Attempt login
       const res = await login(formData.email, formData.password, formData.role);
       if (res.token) {
-        // Save token and user info
+        // Save token and user info (keep both keys for compatibility)
         localStorage.setItem("token", res.token);
+        localStorage.setItem("accessToken", res.token);
         localStorage.setItem("user_id", res.user_id);
         localStorage.setItem("role", res.role);
+
+        // Dispatch custom event to notify auth change
+        window.dispatchEvent(new CustomEvent("auth-changed"));
 
         console.log("Login successful, saved data:", {
           token: res.token,
@@ -74,7 +78,7 @@ export default function LoginForm() {
         });
 
         setError(null);
-        window.location.href = "/"; // redirect after login
+        window.location.href = "/reservation"; // redirect after login
       } else {
         setError("Login failed: No token returned.");
       }

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import Logo from "@/images/lamalogo.png";
 import ArrowRight from "@/assets/arrow-right.svg";
 import Menu from "@/assets/menu.svg";
@@ -37,11 +38,11 @@ export const Header = () => {
               />
             </div>
             <nav className="hidden md:flex gap-6 text-black/60 items-center">
-              <a href="#">Home</a>
-              <a href="#">Pet Sitting</a>
-              <a href="#">Reservation</a>
-              <a href="#">Reviews</a>
-              <a href="#">Profile</a>
+              <Link href="/">Home</Link>
+              <Link href="/pet-sitting">Pet Sitting</Link>
+              <Link href="/reservation">Reservation</Link>
+              <Link href="/reviews">Reviews</Link>
+              <Link href="/profile">Profile</Link>
               <button className="btn btn-primary">Sign Up</button>
             </nav>
           </div>

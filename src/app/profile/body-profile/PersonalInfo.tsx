@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
-import { getProfile, updateProfile } from "@/services/profileService";
+import { getProfile } from "@/services/profileService";
 
 function PersonalInfo() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -12,10 +12,24 @@ function PersonalInfo() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-        const data = await getProfile(userId);
-        setProfile(data);
-        setFormData(data);
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.error("กรุณาเข้าสู่ระบบก่อน");
+          return;
+        }
+
+        const data = await getProfile();
+        const profileData: Profile = {
+          name: data.name ||  "User",
+          user_id: data.user_id || "N/A",
+          telephone_number: data.telephone_number  || "N/A",
+          email: data.email || "N/A",
+          created_at: data.created_at || "N/A",
+          birth_date: data.birth_date || "N/A",
+          address: data.address || "N/A",
+        };
+        setProfile(profileData);
+        setFormData(profileData);
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
@@ -79,9 +93,58 @@ function PersonalInfo() {
     e.preventDefault();
     console.log("Submitting formData:", formData);
     setIsEditing(false);
-    const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-    const updated = await updateProfile(userId, formData);
-    setProfile(updated);
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error("กรุณาเข้าสู่ระบบก่อน");
+        return;
+      }
+    }catch (error) {
+      console.error("Error updating profile:", error);
+    }
+
+      // Update profile via backend API
+  //     const updatedData = await apiFetch<{
+  //       name?: string;
+  //       full_name?: string;
+  //       user_id?: string;
+  //       telephone_number?: string;
+  //       phone_number?: string;
+  //       email?: string;
+  //       created_at?: string;
+  //       birth_date?: string;
+  //       address?: string;
+  //     }>("/user/", {
+  //       method: "PATCH",
+  //       body: JSON.stringify({
+  //         name: formData.name,
+  //         telephone_number: formData.telephone_number,
+  //         birth_date: formData.birth_date,
+  //         address: formData.address,
+  //       }),
+  //     });
+
+  //     // Update local state
+  //     const updatedProfile: Profile = {
+  //       name:
+  //         updatedData.name || updatedData.full_name || formData.name || "User",
+  //       user_id: updatedData.user_id || "N/A",
+  //       telephone_number:
+  //         updatedData.telephone_number ||
+  //         updatedData.phone_number ||
+  //         formData.telephone_number ||
+  //         "N/A",
+  //       email: updatedData.email || "N/A",
+  //       created_at: updatedData.created_at || "N/A",
+  //       birth_date: updatedData.birth_date || formData.birth_date || "N/A",
+  //       address: updatedData.address || formData.address || "N/A",
+  //     };
+  //     setProfile(updatedProfile);
+  //   } catch (error) {
+  //     console.error("Error updating profile:", error);
+  //   }
+  // };
   };
 
   return (

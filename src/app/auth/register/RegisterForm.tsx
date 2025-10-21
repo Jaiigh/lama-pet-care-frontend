@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { register } from "@/services/authService";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
     email: "",
-    username: "",
+    name: "",
     password: "",
     birthDate: "",
     telephone: "",
@@ -53,7 +54,15 @@ export default function RegisterForm() {
 
       console.log("Register submitted:", formData);
       // Handle registration logic here
-
+      register(
+        formData.address,
+        formData.birthDate,
+        formData.email,
+        formData.name,
+        formData.password,
+        formData.telephone,
+        formData.role
+      )
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
@@ -113,22 +122,22 @@ export default function RegisterForm() {
               </label>
               <input
                 type="text"
-                id="username"
-                name="username"
+                id="name"
+                name="name"
                 placeholder="Choose a username"
-                value={formData.username}
+                value={formData.name}
                 onChange={handleInputChange}
-                autoComplete="username"
+                autoComplete="name"
                 className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-[#E8F6F4] rounded-lg border-0 focus:ring-0 focus:border-2 focus:border-[#76D8B1] focus-visible:ring-1 focus-visible:ring-[#76D8B1] outline-none transition-all duration-200 text-sm sm:text-base"
-                aria-invalid={errors.username ? "true" : "false"}
+                aria-invalid={errors.name ? "true" : "false"}
                 aria-describedby={
-                  errors.username ? "username-error" : undefined
+                  errors.name ? "username-error" : undefined
                 }
                 required
               />
-              {errors.username && (
+              {errors.name && (
                 <p id="username-error" className="mt-1 text-xs text-red-600">
-                  {errors.username}
+                  {errors.name}
                 </p>
               )}
             </div>
@@ -278,7 +287,7 @@ export default function RegisterForm() {
                 <option value="" disabled>
                   Select role
                 </option>
-                <option value="PetOwner">PetOwner</option>
+                <option value="owner">PetOwner</option>
                 <option value="Doctor">Doctor</option>
                 <option value="Caretaker">Caretaker</option>
               </select>

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Logo from "@/images/empty-avatar.png";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { getProfile } from "@/services/profileService";
 
@@ -13,9 +13,23 @@ function Display() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const userId = "0917f704-f9e1-4d21-a940-8eb609242313"; // test user_id -> fix when auth is ready
-        const data = await getProfile(userId);
-        setProfile(data);
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          console.error("กรุณาเข้าสู่ระบบก่อน");
+          return;
+        }
+
+        const data = await getProfile();
+        const profileData: Profile = {
+          name: data.name || "User",
+          user_id: data.user_id || "N/A",
+          telephone_number: data.telephone_number  || "N/A",
+          email: data.email || "N/A",
+          created_at: data.created_at || "N/A",
+          birth_date: data.birth_date || "N/A",
+          address: data.address || "N/A",
+        };
+        setProfile(profileData);
       } catch (error) {
         console.error("Error fetching profile:", error);
       }

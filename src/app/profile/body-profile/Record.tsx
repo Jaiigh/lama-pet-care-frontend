@@ -1,3 +1,7 @@
+"use client";
+import { handler } from "next/dist/build/templates/app-page";
+import { use } from "react";
+
 const record = [
   {
     id: 1,
