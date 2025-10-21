@@ -1,7 +1,8 @@
-"use client";
-import ReservationCreateSection from "../reservation/section/ReservationCreateSection";
-import PetOwnerCardSection from "../reservation/section/PetOwnerCardSection";
-export default function Home() {
+import ReservationCreateSection from "../section/ReservationCreateSection";
+import { Suspense } from "react";
+import PetOwnerCardSection from "../section/PetOwnerCardSection";
+export default async function CreatePage() {
+  
   return (
     <div className="min-h-screen flex justify-center bg-[#EBF8F4] p-8">
       <div className="bg-white shadow-lg rounded-lg w-screen h-[700px]">
@@ -16,7 +17,9 @@ export default function Home() {
 
           {/* ด้านขวา */}
           <div className="w-full md:w-3/5 p-8">
-            <ReservationCreateSection/>
+            <Suspense>
+              <ReservationCreateSection/>
+            </Suspense>
           </div>
         </div>
       </div>
