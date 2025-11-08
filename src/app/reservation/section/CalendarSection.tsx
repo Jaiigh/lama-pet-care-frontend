@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
@@ -13,23 +13,10 @@ import { DayInfo } from "@/interfaces/profileInterface";
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
-interface Booking {
-  date: string;
-  service_name?: string;
-  services?: Array<{ name: string }> | { name: string };
-}
-
-interface BookingsResponse {
-  bookings: Booking[];
-}
-
 const Calendar = () => {
   const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [bookings, setBookings] = useState<{
-    [key: string]: { hasBooking?: boolean; badges?: string[] };
-  }>({});
 
     
   const handleDateSelect = (date: string) => {
@@ -53,15 +40,14 @@ const Calendar = () => {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = currentMonth.date(day);
       const dateString = date.format("YYYY-MM-DD");
-      const bookingInfo = bookings[dateString];
 
       grid.push({
         date: dateString,
         dayOfMonth: day,
         isToday: date.isSame(today, "day"),
         isSelected: dateString === selectedDate,
-        hasBooking: bookingInfo?.hasBooking || false,
-        badges: bookingInfo?.badges || [],
+        hasBooking: false,
+        badges: [],
         isDisabled: date.isBefore(today, "day"),
       });
     }

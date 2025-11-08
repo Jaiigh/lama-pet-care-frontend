@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Logo from "@/images/empty-avatar.png";
-import { getProfile } from "@/services/profileService"; 
+import { getUser } from "@/utils/api";
 
 interface Profile {
   name: string;
@@ -16,16 +16,16 @@ const PetOwnerCard = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
         if (!token) {
           console.error("กรุณาเข้าสู่ระบบก่อน");
           return;
         }
 
-        const data = await getProfile();
+        const data = await getUser();
         setProfile({
-          name: data.name || "User",
-          telephone_number: data.telephone_number || "N/A",
+          name: data.name || data.full_name || "User",
+          telephone_number: data.telephone_number || data.phone_number || "N/A",
         });
       } catch (error: unknown) {
         console.error("Error fetching profile:", error);
