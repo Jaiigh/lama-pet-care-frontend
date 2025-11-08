@@ -16,7 +16,8 @@ const PetOwnerCard = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+        const token =
+          localStorage.getItem("accessToken") || localStorage.getItem("token");
         if (!token) {
           console.error("กรุณาเข้าสู่ระบบก่อน");
           return;
