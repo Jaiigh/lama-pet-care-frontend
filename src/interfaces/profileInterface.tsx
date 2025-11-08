@@ -8,6 +8,26 @@ export interface Profile {
   address: string;
 }
 
+export interface Pet {
+  pet_id: string;
+  owner_id: string;
+  breed: string;
+  name: string;
+  birth_date: string;
+  weight: string;
+  kind: string;
+  sex: string;
+}
+
+export interface PetsResponse {
+  massage: string;
+  data: {
+    amount: number;
+    pets: Pet[];
+  };
+  status: number;
+}
+
 export interface DayInfo {
   date: string;
   dayOfMonth: number;
