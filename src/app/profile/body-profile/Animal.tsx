@@ -4,7 +4,7 @@ import emptyPetAvatar from "@/images/empty-pet-avatar.png";
 import dayjs from 'dayjs';
 
 import { use, useEffect, useState } from "react";
-import { Pet, PetsResponse } from "@/interfaces/profileInterface";
+import { Pet, PetsApiResponse } from "@/interfaces/profileInterface";
 import { getMyPets } from "@/services/profileService";
 
 function Animal() {

@@ -19,7 +19,7 @@ export interface Pet {
   sex: string;
 }
 
-export interface PetsResponse {
+export interface PetsApiResponse {
   massage: string;
   data: {
     amount: number;

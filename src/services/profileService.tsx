@@ -1,4 +1,4 @@
-import { Profile, Pet, PetsResponse } from "@/interfaces/profileInterface";
+import { Profile, Pet, PetsApiResponse } from "@/interfaces/profileInterface";
 import { environment } from "@/env/environment";
 
 const ownerURL = environment.masterUrl + "/user/";
