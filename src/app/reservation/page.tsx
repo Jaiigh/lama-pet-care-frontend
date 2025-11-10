@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PetOwnerCardSection from "./section/PetOwnerCardSection";
-import ModeSelection from "./components/ModeSelection";
-import CalendarWithMode from "./components/CalendarWithMode";
+import ModeSelection from "@/components/reservation/ModeSelection";
+import CalendarWithMode from "@/components/reservation/CalendarWithMode";
 import { ReservationMode } from "@/interfaces/reservationFlowInterface";
 import { useReservationSelection } from "@/context/ReservationSelectionContext";
 

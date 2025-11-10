@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import PetOwnerCard from '@/app/reservation/components/PetOwnerCard';
+import PetOwnerCard from '@/components/reservation/PetOwnerCard';
 const PetOwnerCardSection = () => {
   return <PetOwnerCard />;
 };

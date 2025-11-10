@@ -6,7 +6,7 @@ import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatToThaiBuddhistDate, thaiDayShortNames } from "@/utils/thaiDate";
-import CalendarDay from "@/app/reservation/components/CalendarDay";
+import CalendarDay from "@/components/reservation/CalendarDay";
 import { DayInfo } from "@/interfaces/profileInterface";
 import { ReservationMode } from "@/interfaces/reservationFlowInterface";
 

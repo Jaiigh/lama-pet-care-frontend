@@ -3,11 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PetOwnerCardSection from "../section/PetOwnerCardSection";
-import { Staff } from "@/interfaces/reservationFlowInterface";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
-import { Check } from "lucide-react";
 import { useReservationSelection } from "@/context/ReservationSelectionContext";
 
 dayjs.extend(buddhistEra);
