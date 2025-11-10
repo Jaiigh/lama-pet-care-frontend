@@ -16,6 +16,7 @@ const BookPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlDate = searchParams.get("date");
+  const serviceType="cservice"; //mock service type
   const { selection, updateSelection } = useReservationSelection();
 
   const effectiveDate = useMemo(

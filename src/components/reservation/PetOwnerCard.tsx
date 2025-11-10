@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Logo from "@/images/empty-avatar.png";
-import { getUser } from "@/utils/api";
+import { getProfile } from "@/services/profileService";
 
 interface Profile {
   name: string;
@@ -23,10 +23,10 @@ const PetOwnerCard = () => {
           return;
         }
 
-        const data = await getUser();
+        const profileData = await getProfile();
         setProfile({
-          name: data.name || data.full_name || "User",
-          telephone_number: data.telephone_number || data.phone_number || "N/A",
+          name: profileData.name  || "Don't Know",
+          telephone_number: profileData.telephone_number  || "N/A",
         });
       } catch (error: unknown) {
         console.error("Error fetching profile:", error);

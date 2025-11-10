@@ -16,6 +16,7 @@ const BookFullDayPage = () => {
   const searchParams = useSearchParams();
   const urlStart = searchParams.get("startDate");
   const urlEnd = searchParams.get("endDate");
+  const serviceType="cservice"; //mock service type
   const { selection, updateSelection } = useReservationSelection();
 
   const effectiveStart = useMemo(
