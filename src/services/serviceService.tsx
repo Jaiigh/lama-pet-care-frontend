@@ -7,15 +7,16 @@ type ServiceMode = 'full-day' | 'partial';
 export interface Staff {
     id: string;
     name: string;
-    rating: string; // Note: rating is a string in the response
-    // add other fields your backend returns
+    rating: string; 
 }
 
 export interface StaffResponse {
     amount: number;
     staff: Staff[];
 }
-
+export interface StaffArrayResponse {
+    staff: Staff[];
+}
 export interface GetAvailableStaffParams {
     serviceType: ServiceType;
     serviceMode: ServiceMode;
@@ -26,7 +27,7 @@ export interface GetAvailableStaffParams {
 
 const serviceURL = environment.masterUrl+"/services/"; 
 
-export async function getAvailableStaff(params: GetAvailableStaffParams): Promise<StaffResponse> {
+export async function getAvailableStaff(params: GetAvailableStaffParams): Promise<StaffArrayResponse> {
     const { serviceType, serviceMode, startDate, endDate, signal } = params;
 
     const url = new URL('/services/staff', serviceURL);
@@ -49,12 +50,12 @@ export async function getAvailableStaff(params: GetAvailableStaffParams): Promis
     }
 
     const data = await res.json();
-    return data as StaffResponse;
+    return data.staff as StaffArrayResponse;
 }
 
 export default { getAvailableStaff };
 
 // Helper function to get just the staff array
-export function getStaffArray(response: StaffResponse): Staff[] {
+export function getStaffArray(response: StaffArrayResponse): Staff[] {
     return response.staff;
 }

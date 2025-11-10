@@ -1,20 +1,10 @@
 import { environment } from "@/env/environment";
-
+import { Pet } from "@/interfaces/petinterface";
 // src/services/petservice.tsx
 // adjust environment import path if needed
 
 export const petURL = environment.masterUrl + '/pets';
 
-export interface Pet {
-    pet_id: string;
-    owner_id: string;
-    breed: string;
-    name: string;
-    birth_date: string;
-    weight: string;
-    kind: string;
-    sex: string;
-}
 
 interface PetsData {
     amount: number;
