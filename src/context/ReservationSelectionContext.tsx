@@ -18,12 +18,14 @@ export interface ReservationSelection {
   startDate: string | null;
   /** End date for full-day reservations (YYYY-MM-DD) */
   endDate: string | null;
+  /** Selected service type e.g. doctor or caretaker */
+  serviceType: "mservice" | "cservice" | null;
   /** Selected pet id */
   petId: string | null;
   /** Selected staff id */
   staffId: string | null;
   /** Selected time slot for within-day (HH:mm) */
-  timeSlot: string | null;
+  timeSlot: string[]; // now allow multiple selections
 }
 
 const DEFAULT_SELECTION: ReservationSelection = {
@@ -31,9 +33,10 @@ const DEFAULT_SELECTION: ReservationSelection = {
   date: null,
   startDate: null,
   endDate: null,
+  serviceType: null,
   petId: null,
   staffId: null,
-  timeSlot: null,
+  timeSlot: [],
 };
 
 interface ReservationSelectionContextType {
@@ -61,8 +64,19 @@ export const ReservationSelectionProvider = ({
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as ReservationSelection;
-        setSelection({ ...DEFAULT_SELECTION, ...parsed });
+        const parsed = JSON.parse(raw) as Partial<ReservationSelection>;
+        const parsedTimeSlot = parsed?.timeSlot;
+        const normalizedTimeSlot = Array.isArray(parsedTimeSlot)
+          ? parsedTimeSlot
+          : typeof parsedTimeSlot === "string"
+          ? [parsedTimeSlot]
+          : [];
+
+        setSelection({
+          ...DEFAULT_SELECTION,
+          ...parsed,
+          timeSlot: normalizedTimeSlot,
+        });
       }
     } catch (error) {
       console.warn("Failed to parse reservation selection cache", error);
@@ -80,7 +94,21 @@ export const ReservationSelectionProvider = ({
 
   const updateSelection = (payload: Partial<ReservationSelection>) => {
     setSelection((prev) => {
-      const next = { ...prev, ...payload };
+      const payloadTimeSlot = payload.timeSlot;
+      const normalizedPayloadTimeSlot =
+        payloadTimeSlot === undefined
+          ? prev.timeSlot
+          : Array.isArray(payloadTimeSlot)
+          ? payloadTimeSlot
+          : typeof payloadTimeSlot === "string"
+          ? [payloadTimeSlot]
+          : [];
+
+      const next: ReservationSelection = {
+        ...prev,
+        ...payload,
+        timeSlot: normalizedPayloadTimeSlot,
+      };
       persist(next);
       return next;
     });

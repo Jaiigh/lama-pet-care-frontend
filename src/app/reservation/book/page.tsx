@@ -12,11 +12,12 @@ import getAvailableStaff from "@/services/serviceService";
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
+const PAYMENT_REDIRECT_URL = "https://youtu.be/x3IABpPUcC8?si=Muka58AIAouHswTQ";
+
 const BookPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlDate = searchParams.get("date");
-  const serviceType="cservice"; //mock service type
   const { selection, updateSelection } = useReservationSelection();
 
   const effectiveDate = useMemo(
@@ -72,15 +73,29 @@ const BookPage = () => {
   ];
 
   const [selectedPet, setSelectedPet] = useState<string>("");
+  const [selectedServiceType, setSelectedServiceType] = useState<
+    "" | "mservice" | "cservice"
+  >("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
 
   // Sync initial state from context
   useEffect(() => {
     setSelectedPet(selection.petId || "");
+    setSelectedServiceType(selection.serviceType || "");
     setSelectedStaff(selection.staffId || "");
-    setSelectedTimeSlot(selection.timeSlot || null);
-  }, [selection.petId, selection.staffId, selection.timeSlot]);
+    const normalizedSlots = Array.isArray(selection.timeSlot)
+      ? selection.timeSlot
+      : typeof selection.timeSlot === "string"
+      ? [selection.timeSlot]
+      : [];
+    setSelectedTimeSlots(normalizedSlots);
+  }, [
+    selection.petId,
+    selection.serviceType,
+    selection.staffId,
+    selection.timeSlot,
+  ]);
 
   // Ensure date is stored for subsequent pages
   useEffect(() => {
@@ -129,20 +144,29 @@ const BookPage = () => {
   };
 
   const handlePayment = () => {
-    if (!selectedPet || !selectedStaff || !selectedTimeSlot || !effectiveDate) {
-      alert("กรุณาเลือกสัตว์เลี้ยง, staff, และช่วงเวลาก่อน");
+    if (
+      !selectedPet ||
+      !selectedServiceType ||
+      !selectedStaff ||
+      selectedTimeSlots.length === 0 ||
+      !effectiveDate
+    ) {
+      alert(
+        "กรุณาเลือกสัตว์เลี้ยง, ประเภทบริการ, staff และช่วงเวลาที่ต้องการก่อน"
+      );
       return;
     }
 
     updateSelection({
       petId: selectedPet,
+      serviceType: selectedServiceType,
       staffId: selectedStaff,
-      timeSlot: selectedTimeSlot,
+      timeSlot: selectedTimeSlots,
     });
 
-    router.push(
-      `/reservation/payment?mode=within-day&date=${effectiveDate}&staffId=${selectedStaff}&timeSlot=${selectedTimeSlot}&petId=${selectedPet}`
-    );
+    if (typeof window !== "undefined") {
+      window.location.href = PAYMENT_REDIRECT_URL;
+    }
   };
 
   return (
@@ -208,10 +232,56 @@ const BookPage = () => {
               </div>
             </div>
 
-            {/* 2. Staff */}
+            {/* 2. ประเภทบริการ */}
             <div className="mb-6">
               <label className="block mb-3 font-medium text-gray-700">
-                2. staff
+                2. ประเภทบริการ
+              </label>
+              <div className="relative w-full md:w-[280px]">
+                <select
+                  value={selectedServiceType}
+                  onChange={(event) => {
+                    const value = event.target.value as
+                      | "mservice"
+                      | "cservice"
+                      | "";
+                    setSelectedServiceType(value);
+                    updateSelection({
+                      serviceType: value || null,
+                      staffId: null,
+                      timeSlot: [],
+                    });
+                    setSelectedStaff("");
+                    setSelectedTimeSlots([]);
+                  }}
+                  className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                >
+                  <option value="">เลือกประเภทบริการ</option>
+                  <option value="mservice">หมอ</option>
+                  <option value="cservice">พี่เลี้ยง</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Staff */}
+            <div className="mb-6">
+              <label className="block mb-3 font-medium text-gray-700">
+                3. staff
               </label>
               <div className="relative w-full md:w-[280px]">
                 <select
@@ -222,9 +292,9 @@ const BookPage = () => {
                     updateSelection({
                       staffId: value || null,
                       // clear timeslot when changing staff to avoid mismatched data
-                      timeSlot: null,
+                      timeSlot: [],
                     });
-                    setSelectedTimeSlot(null);
+                    setSelectedTimeSlots([]);
                   }}
                   className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
                 >
@@ -253,21 +323,27 @@ const BookPage = () => {
               </div>
             </div>
 
-            {/* 3. เลือกช่วงเวลาที่ต้องการ */}
+            {/* 4. เลือกช่วงเวลาที่ต้องการ */}
             <div className="mb-8">
               <label className="block mb-4 font-medium text-gray-700">
-                3. เลือกช่วงเวลาที่ต้องการ
+                4. เลือกช่วงเวลาที่ต้องการ
               </label>
               <div className="grid grid-cols-4 md:grid-cols-4 gap-3">
                 {timeSlots.map((time) => (
                   <button
                     key={time}
                     onClick={() => {
-                      setSelectedTimeSlot(time);
-                      updateSelection({ timeSlot: time });
+                      setSelectedTimeSlots((prev) => {
+                        const alreadySelected = prev.includes(time);
+                        const next = alreadySelected
+                          ? prev.filter((slot) => slot !== time)
+                          : [...prev, time];
+                        updateSelection({ timeSlot: next });
+                        return next;
+                      });
                     }}
                     className={`py-3 px-4 rounded-lg font-medium transition-all border-2 ${
-                      selectedTimeSlot === time
+                      selectedTimeSlots.includes(time)
                         ? "bg-[#61C5AA] text-white border-[#61C5AA] shadow-md"
                         : "bg-white border-gray-200 text-gray-800 hover:border-[#61C5AA] hover:bg-[#EBF8F4]"
                     }`}
@@ -280,13 +356,26 @@ const BookPage = () => {
 
             {/* ปุ่มชำระเงิน */}
             <div className="mt-6">
-              <button
-                onClick={handlePayment}
-                disabled={!selectedPet || !selectedStaff || !selectedTimeSlot}
-                className="w-full md:w-auto min-w-[200px] bg-[#61C5AA] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#4FA889] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                ชำระเงิน
-              </button>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <button
+                  onClick={() => router.back()}
+                  className="inline-flex items-center justify-center rounded-lg border border-[#61C5AA] px-6 py-3 text-sm font-semibold text-[#61C5AA] transition-colors hover:bg-[#EBF8F4]"
+                >
+                  ← กลับ
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={
+                    !selectedPet ||
+                    !selectedServiceType ||
+                    !selectedStaff ||
+                    selectedTimeSlots.length === 0
+                  }
+                  className="inline-flex items-center justify-center rounded-lg bg-[#61C5AA] px-8 py-3 text-base font-semibold text-white transition-colors hover:bg-[#4FA889] disabled:bg-gray-400 disabled:cursor-not-allowed md:min-w-[260px]"
+                >
+                  ชำระเงิน
+                </button>
+              </div>
             </div>
           </div>
         </div>
