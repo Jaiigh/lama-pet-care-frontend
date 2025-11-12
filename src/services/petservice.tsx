@@ -1,5 +1,5 @@
 import { environment } from "@/env/environment";
-import { Pet } from "@/interfaces/petinterface";
+import { Pet } from "@/interfaces/petInterface";
 // src/services/petservice.tsx
 // adjust environment import path if needed
 

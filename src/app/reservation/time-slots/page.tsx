@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 // Mock data - no API calls for now
 import {
@@ -11,7 +11,7 @@ import {
 import dayjs from "dayjs";
 import { Loader2 } from "lucide-react";
 
-const TimeSlotsPage = () => {
+const TimeSlotsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "within-day";
@@ -175,4 +175,22 @@ const TimeSlotsPage = () => {
   );
 };
 
-export default TimeSlotsPage;
+function TimeSlotsLoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#EBF8F4] p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-[#61C5AA]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function TimeSlotsPage() {
+  return (
+    <Suspense fallback={<TimeSlotsLoadingFallback />}>
+      <TimeSlotsContent />
+    </Suspense>
+  );
+}
