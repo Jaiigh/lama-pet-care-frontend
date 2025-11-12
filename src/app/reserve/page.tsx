@@ -2,25 +2,40 @@
 
 import { use, useEffect, useState } from "react";
 import { Reservation, ReservationApiResponse } from "@/interfaces/reservationInterface";
-import { getReservation } from "@/services/reservationService";
+import { Payment, PaymentApiResponse } from "@/interfaces/paymentInterface";
+import { getAllReservation } from "@/services/reservationService";
+import { getAllPayment } from "@/services/paymentService";
 
 export default function Home() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  
+  const [payments, setPayments] = useState<Payment[]>([]);
   
     useEffect(() => {
       const fetchReservations = async () => {
         try {
-          const Token = localStorage.getItem("token");
-          const response : ReservationApiResponse = await getReservation(Token);
-          const services = response.data.services;
-          setReservations(services);
+          const response : Reservation[] = await getAllReservation();
+          setReservations(response);
         } catch (error) {
           console.error("Error fetching reservations:", error);
         }
       };
       fetchReservations();
+
+      const fetchPayments = async () => {
+        try {
+          const response : Payment[] = await getAllPayment();
+          setPayments(response);
+        } catch (error) {
+          console.error("Error fetching payments:", error);
+        }
+      };
+      fetchPayments();
     }, []);
+
+  const paymentMap = payments.reduce((map, payment) => {
+        map[payment.payment_id] = payment;
+        return map;
+    }, {} as Record<string, Payment>);
 
   const shortenID = (id: string) => {
     if (id.length <= 12) return id;
@@ -51,7 +66,7 @@ export default function Home() {
             <div>เสร็จสิ้น</div>
         </div>
         <div className="reserve-container w-[1250px] h-[492px] mx-auto pt-7 bg-[#FDFDFA] flex flex-col gap-4 max-h-[500px] overflow-y-auto overflow-x-hidden">
-            {reservations.map((reserve) => (
+            {reservations && reservations.map((reserve) => (
                 <div key={reserve.service_id} className="reserve-item p-5 px-[70px] mx-auto w-[1200px] h-[98px] border border-gray-400 rounded-lg grid grid-cols-[150px_150px_150px_150px_150px] gap-x-20">
                     <div className="detail-group flex flex-col items-start gap-1">
                         <div className="label text-[13px]">หมายเลขการจอง</div>
@@ -59,15 +74,15 @@ export default function Home() {
                     </div>
                     <div className="detail-group flex flex-col items-start gap-1">
                         <div className="label text-[13px]">วันที่จอง</div>
-                        <div className="value text-[22px] font-bold text-[#3AB795]">{reserve.reserve_date.split("T")[0]}</div>
+                        <div className="value text-[22px] font-bold text-[#3AB795]">{reserve.reserve_date_start.split('T')[0]}</div>
                     </div>
                     <div className="detail-group flex flex-col items-start gap-1">
                         <div className="label text-[13px]">เวลา</div>
-                        <div className="value text-[22px] font-bold text-[#3AB795]">{reserve.reserve_date.split("T")[1]}</div>
+                        <div className="value text-[22px] font-bold text-[#3AB795]">{reserve.reserve_date_start.split('T')[1].slice(0, -1)}</div>
                     </div>
                     <div className="detail-group flex flex-col items-start gap-1">
                         <div className="label text-[13px]">ราคาค่าบริการ</div>
-                        <div className="value text-[22px] font-bold text-[#3AB795]">{reserve.price}</div>
+                        <div className="value text-[22px] font-bold text-[#3AB795]">{paymentMap[reserve.payment_id]?.price ?? 'N/A'}</div>
                     </div>
                     <div className="detail-group flex flex-col items-start gap-1">
                         <div className="label text-[13px]">สถานะ</div>

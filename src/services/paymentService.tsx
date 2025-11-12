@@ -1,18 +1,18 @@
 import {
-  Reservation,
-  ReservationApiResponse,
-} from "@/interfaces/reservationInterface";
+  Payment,
+  PaymentApiResponse,
+} from "@/interfaces/paymentInterface";
 
 import { environment } from "@/env/environment";
 
-const reservationURL = environment.masterUrl + "/services/";
+const paymentURL = environment.masterUrl + "/payments/";
 
-export const getSinglePageReservation = async (
+export const getSinglePagePayment = async (
   page: number,
   limit: number
-): Promise<ReservationApiResponse> => {
+): Promise<PaymentApiResponse> => {
   const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const urlWithPage = `${reservationURL}?page=${page}&limit=${limit}`;
+  const urlWithPage = `${paymentURL}?page=${page}&limit=${limit}`;
   try {
     const response = await fetch(urlWithPage, {
       method: "GET",
@@ -24,7 +24,7 @@ export const getSinglePageReservation = async (
 
     if (!response.ok) {
       console.error(`Failed to fetch page ${page}:`, response.statusText);
-            throw new Error(`Failed to fetch reservation page ${page}`);
+            throw new Error(`Failed to fetch payment page ${page}`);
     }
 
     const json = await response.json();
@@ -32,30 +32,29 @@ export const getSinglePageReservation = async (
     return json;
   }
   catch (err) {
-    console.error("Error fetching reservation:", err);
+    console.error("Error fetching payment:", err);
     throw err;
   }
 };
 
-
-export const getAllReservation = async (): Promise<Reservation[]> => {
-  let allReservations: Reservation[] = [];
+export const getAllPayment = async (): Promise<Payment[]> => {
+  let allPayments: Payment[] = [];
   let currentPage = 1;
   let amountOfItems = 0;
   let hasMorePages = true;
 
-  console.log("Fetching all reservations...");
+  console.log("Fetching all payments...");
 
   while (hasMorePages) {
-      const response = await getSinglePageReservation(currentPage, 5);
-      const reservations = response.data.services;
+      const response = await getSinglePagePayment(currentPage, 5);
+      const payments = response.data.payments;
       if(currentPage === 1) {
         amountOfItems = response.data.amount;
       }
 
-      allReservations = [...allReservations, ...reservations];
+      allPayments = [...allPayments, ...payments];
 
-      if(allReservations.length >=amountOfItems) {
+      if(allPayments.length >= amountOfItems) {
         hasMorePages = false;
       }else{
         currentPage++;
@@ -66,6 +65,7 @@ export const getAllReservation = async (): Promise<Reservation[]> => {
       }
   }
 
-  console.log("Total reservations fetched:", allReservations.length);
-  return allReservations;
+  console.log("Total reservations fetched:", allPayments.length);
+  return allPayments;
 };
+
