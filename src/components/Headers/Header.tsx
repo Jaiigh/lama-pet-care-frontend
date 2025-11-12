@@ -1,10 +1,20 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Logo from "@/images/lamalogo.png";
 import ArrowRight from "@/assets/arrow-right.svg";
 import Menu from "@/assets/menu.svg";
 
 export const Header = () => {
+  const pathname = usePathname();
+  const hideHeader = pathname?.startsWith("/admin");
+
+  if (hideHeader) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 backdrop-blur-sm z-20">
       <div className="flex justify-center items-center py-3 bg-black text-white text-sm">
