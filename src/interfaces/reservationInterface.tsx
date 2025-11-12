@@ -5,7 +5,10 @@ export interface Reservation {
   payment_id: string;
   price: number;
   status: string;
-  reserve_date: string;
+  reserve_date_start: string;
+  reserve_date_end: string;
+  service_type: string;
+  staff_id: string;
 }
 
 export interface ReservationApiResponse {
