@@ -43,7 +43,7 @@ export default function ReservationPage() {
       date: null,
       startDate: null,
       endDate: null,
-      timeSlot: null,
+      timeSlot: [],
       petId: null,
       staffId: null,
     });

@@ -11,12 +11,13 @@ import { useReservationSelection } from "@/context/ReservationSelectionContext";
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
+const PAYMENT_REDIRECT_URL = "https://youtu.be/x3IABpPUcC8?si=Muka58AIAouHswTQ";
+
 const BookFullDayPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlStart = searchParams.get("startDate");
   const urlEnd = searchParams.get("endDate");
-  const serviceType="cservice"; //mock service type
   const { selection, updateSelection } = useReservationSelection();
 
   const effectiveStart = useMemo(
@@ -76,13 +77,14 @@ const BookFullDayPage = () => {
   ];
 
   const [selectedPet, setSelectedPet] = useState<string>("");
+  const [selectedServiceType, setSelectedServiceType] = useState<
+    "" | "mservice" | "cservice"
+  >("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
-
-  // Since we only show available staff, all selected staff are available
-  const isStaffAvailable = !!selectedStaff;
 
   useEffect(() => {
     setSelectedPet(selection.petId || "");
+    setSelectedServiceType(selection.serviceType || "");
     if (
       selection.staffId &&
       mockStaffList.some((staff) => staff.id === selection.staffId)
@@ -94,7 +96,13 @@ const BookFullDayPage = () => {
         updateSelection({ staffId: null });
       }
     }
-  }, [selection.petId, selection.staffId, mockStaffList, updateSelection]);
+  }, [
+    selection.petId,
+    selection.serviceType,
+    selection.staffId,
+    mockStaffList,
+    updateSelection,
+  ]);
 
   useEffect(() => {
     if (
@@ -158,25 +166,32 @@ const BookFullDayPage = () => {
   };
 
   const handlePayment = () => {
-    if (!selectedPet || !selectedStaff || !effectiveStart || !effectiveEnd) {
-      alert("กรุณาเลือกสัตว์เลี้ยงและ staff ก่อน");
+    if (
+      !selectedPet ||
+      !selectedServiceType ||
+      !selectedStaff ||
+      !effectiveStart ||
+      !effectiveEnd
+    ) {
+      alert("กรุณาเลือกสัตว์เลี้ยง, ประเภทบริการ และ staff ก่อน");
       return;
     }
 
     updateSelection({
       petId: selectedPet,
+      serviceType: selectedServiceType,
       staffId: selectedStaff,
       startDate: effectiveStart,
       endDate: effectiveEnd,
-      timeSlot: null,
+      timeSlot: [],
     });
 
-    router.push(
-      `/reservation/payment?mode=full-day&startDate=${effectiveStart}&endDate=${effectiveEnd}&staffId=${selectedStaff}&petId=${selectedPet}`
-    );
+    if (typeof window !== "undefined") {
+      window.location.href = PAYMENT_REDIRECT_URL;
+    }
   };
 
-  const canProceed = selectedPet && selectedStaff;
+  const canProceed = selectedPet && selectedServiceType && selectedStaff;
 
   return (
     <div className="min-h-screen bg-[#EBF8F4] py-12 px-4 md:px-8">
@@ -241,10 +256,55 @@ const BookFullDayPage = () => {
               </div>
             </div>
 
-            {/* 2. Staff */}
+            {/* 2. ประเภทบริการ */}
             <div className="mb-6">
               <label className="block mb-3 font-medium text-gray-700">
-                2. staff
+                2. ประเภทบริการ
+              </label>
+              <div className="relative w-full md:w-[280px]">
+                <select
+                  value={selectedServiceType}
+                  onChange={(event) => {
+                    const value = event.target.value as
+                      | "mservice"
+                      | "cservice"
+                      | "";
+                    setSelectedServiceType(value);
+                    updateSelection({
+                      serviceType: value || null,
+                      staffId: null,
+                      timeSlot: [],
+                    });
+                    setSelectedStaff("");
+                  }}
+                  className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                >
+                  <option value="">เลือกประเภทบริการ</option>
+                  <option value="mservice">หมอ</option>
+                  <option value="cservice">พี่เลี้ยง</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Staff */}
+            <div className="mb-6">
+              <label className="block mb-3 font-medium text-gray-700">
+                3. staff
               </label>
               <div className="flex items-center gap-4">
                 <div className="relative w-full md:w-[280px]">
@@ -285,17 +345,25 @@ const BookFullDayPage = () => {
 
             {/* ปุ่มชำระเงิน */}
             <div className="mt-6">
-              <button
-                onClick={handlePayment}
-                disabled={!canProceed}
-                className={`w-full md:w-auto min-w-[200px] font-bold py-3 px-8 rounded-lg transition-colors ${
-                  canProceed
-                    ? "bg-[#61C5AA] text-white hover:bg-[#4FA889] cursor-pointer"
-                    : "bg-gray-400 text-gray-600 cursor-not-allowed"
-                }`}
-              >
-                ชำระเงิน
-              </button>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <button
+                  onClick={() => router.back()}
+                  className="inline-flex items-center justify-center rounded-lg border border-[#61C5AA] px-6 py-3 text-sm font-semibold text-[#61C5AA] transition-colors hover:bg-[#EBF8F4]"
+                >
+                  ← กลับ
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={!canProceed}
+                  className={`inline-flex items-center justify-center rounded-lg px-8 py-3 text-base font-semibold transition-colors md:min-w-[260px] ${
+                    canProceed
+                      ? "bg-[#61C5AA] text-white hover:bg-[#4FA889]"
+                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  }`}
+                >
+                  ชำระเงิน
+                </button>
+              </div>
             </div>
           </div>
         </div>
