@@ -1,10 +1,6 @@
-import { tr } from "framer-motion/client";
-
 export const environment = {
-
-  masterUrl: "https://lama-pet-care-backend-dev.onrender.com/api/v1",
-  
-  production: true,
+  masterUrl: process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080/api",
+  production: process.env.NODE_ENV === "production",
   APIversion: "api/v1/",
 };
 
