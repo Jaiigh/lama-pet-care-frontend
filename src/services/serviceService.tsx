@@ -22,26 +22,25 @@ export interface GetAvailableStaffParams {
     serviceMode: ServiceMode;
     startDate: string; // YYYY-MM-DD
     endDate: string;   // YYYY-MM-DD
-    signal?: AbortSignal;
 }
 
-const serviceURL = environment.masterUrl+"/services/"; 
+const serviceURL = environment.masterUrl+"/services"; 
 
 export async function getAvailableStaff(params: GetAvailableStaffParams): Promise<StaffArrayResponse> {
-    const { serviceType, serviceMode, startDate, endDate, signal } = params;
+    const { serviceType, serviceMode, startDate, endDate} = params;
 
-    const url = new URL('/services/staff', serviceURL);
-    url.search = new URLSearchParams({
+    const url = serviceURL+"/staff";
+    const url2= new URL(url);
+    url2.search = new URLSearchParams({
         serviceType,
         serviceMode,
         startDate,
         endDate,
     }).toString();
 
-    const res = await fetch(url.toString(), {
+    const res = await fetch(url2.toString(), {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
-        signal,
     });
 
     if (!res.ok) {

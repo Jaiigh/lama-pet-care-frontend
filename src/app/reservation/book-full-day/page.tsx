@@ -7,6 +7,8 @@ import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import { useReservationSelection } from "@/context/ReservationSelectionContext";
+import { getAvailableStaff, getStaffArray, type StaffArrayResponse } from "@/services/serviceService";
+import { getPetsByOwner } from "@/services/petservice";
 
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
@@ -16,9 +18,15 @@ const BookFullDayPage = () => {
   const searchParams = useSearchParams();
   const urlStart = searchParams.get("startDate");
   const urlEnd = searchParams.get("endDate");
-  const serviceType="cservice"; //mock service type
+  const serviceType = "cservice"; //mock service type
   const { selection, updateSelection } = useReservationSelection();
 
+  // State for API data
+  const [staffData, setStaffData] = useState<StaffArrayResponse | null>(null);
+  const [petsData, setPetsData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+ 
   const effectiveStart = useMemo(
     () => urlStart || selection.startDate,
     [urlStart, selection.startDate]
@@ -28,52 +36,52 @@ const BookFullDayPage = () => {
     [urlEnd, selection.endDate]
   );
 
-  // Mock staff data with availability status
-  const allStaffList = useMemo(
-    () => [
-      {
-        id: "1",
-        name: "อาก้า",
-        avatar: undefined,
-        rating: 4.5,
-        specialization: "Pet Sitting",
-        status: "online",
-        available: true, // สะดวก
-      },
-      {
-        id: "2",
-        name: "นาย B",
-        avatar: undefined,
-        rating: 4.8,
-        specialization: "Dog Walking",
-        status: "available",
-        available: false, // ไม่สะดวก
-      },
-      {
-        id: "3",
-        name: "นาย C",
-        avatar: undefined,
-        rating: 4.2,
-        specialization: "Pet Grooming",
-        status: "available",
-        available: true, // สะดวก
-      },
-    ],
-    []
-  );
+  // Fetch staff data
+  useEffect(() => {
+    const fetchStaff = async () => {
+      if (!effectiveStart || !effectiveEnd) return;
 
-  // Filter to show only available staff
-  const mockStaffList = useMemo(
-    () => allStaffList.filter((staff) => staff.available),
-    [allStaffList]
-  );
+      try {
+        setLoading(true);
+        const data = await getAvailableStaff({
+          serviceType: serviceType as any, // "cservice"
+          serviceMode: "full-day",
+          startDate: effectiveStart,
+          endDate: effectiveEnd,
+        });
+        setStaffData(data);
+        setError(null);
+      } catch (err: any) {
+        console.error("Failed to fetch staff:", err);
+        setError(err.message || "Failed to load staff data");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Mock pet data
-  const mockPets = [
-    { id: "1", name: "สัตว์เลี้ยง" },
-    { id: "2", name: "ไอโบ้" },
-    { id: "3", name: "แงว" },
-  ];
+    fetchStaff();
+  }, [effectiveStart, effectiveEnd, serviceType]);
+
+  // Fetch pets data
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        const pets = await getPetsByOwner();
+        setPetsData(pets);
+      } catch (err: any) {
+        console.error("Failed to fetch pets:", err);
+        // Keep empty array for pets if fetch fails
+        setPetsData([]);
+      }
+    };
+
+    fetchPets();
+  }, []);
+
+  // Get staff list from API response
+  const staffList = useMemo(() => {
+    return staffData ? getStaffArray(staffData) : [];
+  }, [staffData]);
 
   const [selectedPet, setSelectedPet] = useState<string>("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
@@ -85,7 +93,7 @@ const BookFullDayPage = () => {
     setSelectedPet(selection.petId || "");
     if (
       selection.staffId &&
-      mockStaffList.some((staff) => staff.id === selection.staffId)
+      staffList.some((staff) => staff.id === selection.staffId)
     ) {
       setSelectedStaff(selection.staffId);
     } else {
@@ -94,7 +102,7 @@ const BookFullDayPage = () => {
         updateSelection({ staffId: null });
       }
     }
-  }, [selection.petId, selection.staffId, mockStaffList, updateSelection]);
+  }, [selection.petId, selection.staffId, staffList, updateSelection]);
 
   useEffect(() => {
     if (
@@ -213,15 +221,16 @@ const BookFullDayPage = () => {
                     updateSelection({ petId: value || null });
                   }}
                   className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                  disabled={loading}
                 >
-                  <option value="">สัตว์เลี้ยง</option>
-                  {mockPets
-                    .filter((pet) => pet.id !== "1")
-                    .map((pet) => (
-                      <option key={pet.id} value={pet.id}>
-                        {pet.name}
-                      </option>
-                    ))}
+                  <option value="">
+                    {loading ? "กำลังโหลด..." : "สัตว์เลี้ยง"}
+                  </option>
+                  {petsData.map((pet) => (
+                    <option key={pet.pet_id} value={pet.pet_id}>
+                      {pet.name}
+                    </option>
+                  ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg
@@ -246,6 +255,11 @@ const BookFullDayPage = () => {
               <label className="block mb-3 font-medium text-gray-700">
                 2. staff
               </label>
+              {error && (
+                <div className="text-red-500 text-sm mb-2">
+                  {error}
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <div className="relative w-full md:w-[280px]">
                   <select
@@ -256,9 +270,12 @@ const BookFullDayPage = () => {
                       updateSelection({ staffId: value || null });
                     }}
                     className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                    disabled={loading}
                   >
-                    <option value="">เลือก staff</option>
-                    {mockStaffList.map((staff) => (
+                    <option value="">
+                      {loading ? "กำลังโหลด..." : "เลือก staff"}
+                    </option>
+                    {staffList.map((staff) => (
                       <option key={staff.id} value={staff.id}>
                         {staff.name}
                       </option>
