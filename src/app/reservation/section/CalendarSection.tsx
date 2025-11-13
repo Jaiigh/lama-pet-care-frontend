@@ -117,7 +117,6 @@ const Calendar = () => {
         <button
           onClick={() => {
             const token =
-              localStorage.getItem("accessToken") ||
               localStorage.getItem("token");
             if (!token) {
               // Redirect to login page

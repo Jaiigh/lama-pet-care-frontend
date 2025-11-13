@@ -7,6 +7,8 @@ import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import { useReservationSelection } from "@/context/ReservationSelectionContext";
+import { getAvailableStaff, type Staff } from "@/services/serviceService";
+import { getPetsByOwner } from "@/services/petservice";
 
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
@@ -23,6 +25,13 @@ const BookFullDayPageInner = () => {
   const urlEnd = searchParams.get("endDate");
   const { selection, updateSelection } = useReservationSelection();
 
+  // State for API data
+  const [cstaffData, setCStaffData] = useState<Staff[] | null>(null);
+  const [mstaffData, setMStaffData] = useState<Staff[] | null>(null);
+  const [petsData, setPetsData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+ 
   const effectiveStart = useMemo(
     () => urlStart || selection.startDate,
     [urlStart, selection.startDate]
@@ -32,52 +41,53 @@ const BookFullDayPageInner = () => {
     [urlEnd, selection.endDate]
   );
 
-  // Mock staff data with availability status
-  const allStaffList = useMemo(
-    () => [
-      {
-        id: "1",
-        name: "อาก้า",
-        avatar: undefined,
-        rating: 4.5,
-        specialization: "Pet Sitting",
-        status: "online",
-        available: true,
-      },
-      {
-        id: "2",
-        name: "นาย B",
-        avatar: undefined,
-        rating: 4.8,
-        specialization: "Dog Walking",
-        status: "available",
-        available: false,
-      },
-      {
-        id: "3",
-        name: "นาย C",
-        avatar: undefined,
-        rating: 4.2,
-        specialization: "Pet Grooming",
-        status: "available",
-        available: true,
-      },
-    ],
-    []
-  );
+  // Fetch staff data
+  useEffect(() => {
+    const fetchStaff = async () => {
+      if (!effectiveStart || !effectiveEnd) return;
 
-  // Filter to show only available staff
-  const mockStaffList = useMemo(
-    () => allStaffList.filter((staff) => staff.available),
-    [allStaffList]
-  );
+      try {
+        setLoading(true);
+        const Cdata = await getAvailableStaff({
+          serviceType: "cservice" as any,
+          serviceMode: "full-day",
+          startDate: effectiveStart,
+          endDate: effectiveEnd,
+        });
+        const Mdata= await getAvailableStaff({
+          serviceType: "mservice" as any,
+          serviceMode: "full-day",
+          startDate: effectiveStart,
+          endDate: effectiveEnd,
+        });
+        setCStaffData(Cdata);
+        setMStaffData(Mdata);
+      } catch (err: any) {
+        console.error("Failed to fetch staff:", err);
+        setError(err.message || "Failed to load staff data");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Mock pet data
-  const mockPets = [
-    { id: "1", name: "สัตว์เลี้ยง" },
-    { id: "2", name: "ไอโบ้" },
-    { id: "3", name: "แงว" },
-  ];
+    fetchStaff();
+  }, [effectiveStart, effectiveEnd]);
+
+  // Fetch pets data
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        const pets = await getPetsByOwner();
+        setPetsData(pets);
+      } catch (err: any) {
+        console.error("Failed to fetch pets:", err);
+        // Keep empty array for pets if fetch fails
+        setPetsData([]);
+      }
+    };
+
+    fetchPets();
+  }, []);
 
   const [selectedPet, setSelectedPet] = useState<string>("");
   const [selectedServiceType, setSelectedServiceType] = useState<
@@ -85,12 +95,25 @@ const BookFullDayPageInner = () => {
   >("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
 
+  // Get staff list from API response
+  const staffList = useMemo(() => {
+    let result: Staff[] = [];
+    if (selectedServiceType === "mservice") {
+      result = Array.isArray(mstaffData) ? mstaffData : [];
+    } else if (selectedServiceType === "cservice") {
+      result = Array.isArray(cstaffData) ? cstaffData : [];
+    } else {
+      result = [];
+    }
+    return result;
+  }, [cstaffData, mstaffData, selectedServiceType]);
+
   useEffect(() => {
     setSelectedPet(selection.petId || "");
     setSelectedServiceType(selection.serviceType || "");
     if (
       selection.staffId &&
-      mockStaffList.some((staff) => staff.id === selection.staffId)
+      staffList.some((staff) => staff.id === selection.staffId)
     ) {
       setSelectedStaff(selection.staffId);
     } else {
@@ -103,7 +126,7 @@ const BookFullDayPageInner = () => {
     selection.petId,
     selection.serviceType,
     selection.staffId,
-    mockStaffList,
+    staffList,
     updateSelection,
   ]);
 
@@ -131,7 +154,6 @@ const BookFullDayPageInner = () => {
   }, [effectiveStart, effectiveEnd, router]);
 
   const formatDateRange = () => {
-    if (!effectiveStart || !effectiveEnd) return "";
     const start = dayjs(effectiveStart);
     const end = dayjs(effectiveEnd);
     const thaiDays = [
@@ -168,7 +190,7 @@ const BookFullDayPageInner = () => {
     return `สำหรับวัน${startDayName}ที่ ${startDay} - ${endDay} ${endMonth} ${year}`;
   };
 
-  const handlePayment = () => {
+  const handleSubmit = () => {
     if (
       !selectedPet ||
       !selectedServiceType ||
@@ -231,15 +253,16 @@ const BookFullDayPageInner = () => {
                     updateSelection({ petId: value || null });
                   }}
                   className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                  disabled={loading}
                 >
-                  <option value="">สัตว์เลี้ยง</option>
-                  {mockPets
-                    .filter((pet) => pet.id !== "1")
-                    .map((pet) => (
-                      <option key={pet.id} value={pet.id}>
-                        {pet.name}
-                      </option>
-                    ))}
+                  <option value="">
+                    {loading ? "กำลังโหลด..." : "สัตว์เลี้ยง"}
+                  </option>
+                  {petsData.map((pet) => (
+                    <option key={pet.pet_id} value={pet.pet_id}>
+                      {pet.name}
+                    </option>
+                  ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg
@@ -309,6 +332,11 @@ const BookFullDayPageInner = () => {
               <label className="block mb-3 font-medium text-gray-700">
                 3. staff
               </label>
+              {error && (
+                <div className="text-red-500 text-sm mb-2">
+                  {error}
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <div className="relative w-full md:w-[280px]">
                   <select
@@ -319,9 +347,12 @@ const BookFullDayPageInner = () => {
                       updateSelection({ staffId: value || null });
                     }}
                     className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                    disabled={loading}
                   >
-                    <option value="">เลือก staff</option>
-                    {mockStaffList.map((staff) => (
+                    <option value="">
+                      {loading ? "กำลังโหลด..." : "เลือก staff"}
+                    </option>
+                    {Array.isArray(staffList) && staffList.map((staff) => (
                       <option key={staff.id} value={staff.id}>
                         {staff.name}
                       </option>
@@ -356,7 +387,7 @@ const BookFullDayPageInner = () => {
                   ← กลับ
                 </button>
                 <button
-                  onClick={handlePayment}
+                  onClick={handleSubmit}
                   disabled={!canProceed}
                   className={`inline-flex items-center justify-center rounded-lg px-8 py-3 text-base font-semibold transition-colors md:min-w-[260px] ${
                     canProceed
