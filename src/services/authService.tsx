@@ -127,12 +127,26 @@ export const register = async (
         });
        if (!response.ok) {
         // อ่าน message จาก body ของ response
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Failed to register:", errorData.message || response.statusText);
-        throw new Error("Failed to register");
+        let errorMessage = `Failed to register: ${response.status} ${response.statusText}`;
+        try {
+            const errorData = await response.json();
+            if (errorData.message) {
+                errorMessage = errorData.message;
+            } else if (errorData.error) {
+                errorMessage = errorData.error;
+            }
+            console.error("Failed to register:", errorData);
+        } catch (parseError) {
+            console.error("Failed to parse error response as JSON:", parseError);
+        }
+        throw new Error(errorMessage);
 }   
     } catch (err) {
         console.error("Error registering:", err);
-        throw err;
+        // If it's already an Error, re-throw it; otherwise wrap it
+        if (err instanceof Error) {
+            throw err;
+        }
+        throw new Error("Network error. Please check your connection and try again.");
     }
 };
