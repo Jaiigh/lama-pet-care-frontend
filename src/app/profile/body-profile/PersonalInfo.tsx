@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { getProfile } from "@/services/profileService";
+import { s } from "framer-motion/client";
 
 function PersonalInfo() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -12,8 +13,8 @@ function PersonalInfo() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
+        const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        if (!storedToken) {
           console.error("กรุณาเข้าสู่ระบบก่อน");
           return;
         }
