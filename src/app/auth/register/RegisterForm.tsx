@@ -38,6 +38,7 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrors({});
 
     try {
       // Basic validation
@@ -49,12 +50,13 @@ export default function RegisterForm() {
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
+        setIsSubmitting(false);
         return;
       }
 
       console.log("Register submitted:", formData);
       // Handle registration logic here
-      register(
+      await register(
         formData.address,
         formData.birthDate,
         formData.email,
@@ -62,11 +64,15 @@ export default function RegisterForm() {
         formData.password,
         formData.telephone,
         formData.role
-      )
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      );
+      
+      // Registration successful - redirect to login
+      window.location.href = "/auth/login";
     } catch (error) {
       console.error("Registration failed:", error);
+      setErrors({
+        submit: error instanceof Error ? error.message : "Registration failed. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -297,6 +303,12 @@ export default function RegisterForm() {
                 </p>
               )}
             </div>
+
+            {errors.submit && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
 
             <button
               type="submit"
