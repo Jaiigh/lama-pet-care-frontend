@@ -8,8 +8,16 @@ import ArrowRight from "@/assets/arrow-right.svg";
 import Menu from "@/assets/menu.svg";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfile } from "@/services/profileService";
+import { usePathname } from "next/navigation";
 
 export const Header = () => {
+
+  const pathname = usePathname();
+  const hideHeader = pathname?.startsWith("/admin");
+
+  if (hideHeader) {
+    return null;
+  }
   const { isAuthed } = useAuth();
   const [username, setUsername] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -74,7 +82,7 @@ export const Header = () => {
         <p className="text-white/60 hidden md:block">
           Try convenient pet sitting with Lama
         </p>
-        <div className="inline-flex gap-1 items-center">
+        <div className="inline-flex gap-1 items center">
           <Image
             src={ArrowRight}
             alt="Arrow Right"
