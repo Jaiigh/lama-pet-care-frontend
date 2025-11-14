@@ -92,7 +92,7 @@ export default function AdminShell({
           <div className="flex items-center gap-3 rounded-full bg-emerald-50 px-4 py-2">
             <div className="text-right">
               <p className="text-sm font-semibold text-slate-900">
-                นายบริรักษ์ จงกมล
+                นายรามมี่ ขี่คนดำ
               </p>
               <p className="text-xs text-emerald-600">Admin</p>
             </div>
