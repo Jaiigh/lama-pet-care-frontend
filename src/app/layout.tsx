@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 };
 
 import { RoleProvider } from "@/context/RoleContext";
+import { ReservationSelectionProvider } from "@/context/ReservationSelectionContext";
 
 export default function RootLayout({
   children,
@@ -25,8 +26,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${plusJakartaSans.variable} antialiased`}>
         <RoleProvider>
-          <Header />
-          {children}
+          <ReservationSelectionProvider>
+            <Header />
+            {children}
+          </ReservationSelectionProvider>
         </RoleProvider>
       </body>
     </html>

@@ -2,18 +2,71 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 import Logo from "@/images/lamalogo.png";
 import ArrowRight from "@/assets/arrow-right.svg";
 import Menu from "@/assets/menu.svg";
+import { useAuth } from "@/hooks/useAuth";
+import { getProfile } from "@/services/profileService";
 
 export const Header = () => {
-  const pathname = usePathname();
-  const hideHeader = pathname?.startsWith("/admin");
+  const { isAuthed } = useAuth();
+  const [username, setUsername] = useState<string | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  if (hideHeader) {
-    return null;
-  }
+  useEffect(() => {
+    const fetchUsername = async () => {
+      if (isAuthed) {
+        try {
+          const profile = await getProfile();
+          setUsername(profile.name);
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
+      } else {
+        setUsername(null);
+      }
+    };
+
+    fetchUsername();
+  }, [isAuthed]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  const handleLogout = () => {
+    // Clear all auth-related data from localStorage
+    if (globalThis.window !== undefined) {
+      globalThis.window.localStorage.removeItem("token");
+      globalThis.window.localStorage.removeItem("accessToken");
+      globalThis.window.localStorage.removeItem("user_id");
+      globalThis.window.localStorage.removeItem("role");
+
+      // Dispatch auth-changed event to update auth state
+      globalThis.window.dispatchEvent(new CustomEvent("auth-changed"));
+
+      // Redirect to home page
+      globalThis.window.location.href = "/";
+    }
+  };
 
   return (
     <header className="sticky top-0 backdrop-blur-sm z-20">
@@ -21,7 +74,7 @@ export const Header = () => {
         <p className="text-white/60 hidden md:block">
           Try convenient pet sitting with Lama
         </p>
-        <div className="inline-flex gap-1 items center">
+        <div className="inline-flex gap-1 items-center">
           <Image
             src={ArrowRight}
             alt="Arrow Right"
@@ -53,7 +106,37 @@ export const Header = () => {
               <Link href="/reservation">Reservation</Link>
               <Link href="/reviews">Reviews</Link>
               <Link href="/profile">Profile</Link>
-              <button className="btn btn-primary">Sign Up</button>
+              {isAuthed && username ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="text-black font-medium hover:text-black/80 transition-colors cursor-pointer focus:outline-none"
+                  >
+                    {username}
+                  </button>
+                  {showDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      <Link
+                        href="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowDropdown(false)}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href="/auth/register" className="btn btn-primary">
+                  Sign Up
+                </Link>
+              )}
             </nav>
           </div>
         </div>
