@@ -4,13 +4,9 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ClipboardList,
-  LayoutDashboard,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ClipboardList, Users, type LucideIcon } from "lucide-react";
 import Logo from "@/images/lamalogo.png";
+import { useAdminSession } from "@/components/admin/AdminSessionProvider";
 
 type AdminShellProps = {
   title: string;
@@ -25,7 +21,6 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { label: "Overview", href: "/admin/overview", icon: LayoutDashboard },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Services", href: "/admin/services", icon: ClipboardList },
 ];
@@ -36,10 +31,11 @@ export default function AdminShell({
   children,
 }: AdminShellProps) {
   const pathname = usePathname();
+  const { profile } = useAdminSession();
 
   return (
     <div className="flex min-h-screen bg-[#E6F5EE]">
-      <aside className="w-64 shrink-0 border-r border-emerald-100 bg-white">
+      <aside className="sticky top-0 h-screen w-64 shrink-0 border-r border-emerald-100 bg-white">
         <div className="flex items-center gap-3 border-b border-emerald-50 px-6 py-4">
           <Image src={Logo} width={96} height={32} alt="LAMA logo" priority />
           <div>
@@ -92,7 +88,7 @@ export default function AdminShell({
           <div className="flex items-center gap-3 rounded-full bg-emerald-50 px-4 py-2">
             <div className="text-right">
               <p className="text-sm font-semibold text-slate-900">
-                นายรามมี่ ขี่คนดำ
+                {profile?.name ?? "Admin"}
               </p>
               <p className="text-xs text-emerald-600">Admin</p>
             </div>
