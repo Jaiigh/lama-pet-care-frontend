@@ -95,17 +95,10 @@ const BookPage = () => {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
   const [rangeStart, setRangeStart] = useState<string | null>(null);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log('State changed - rangeStart:', rangeStart, 'selectedTimeSlots:', selectedTimeSlots);
-  }, [rangeStart, selectedTimeSlots]);
-
   // Create continuous time range between start and end
   const createTimeRange = (start: string, end: string): string[] => {
-    console.log('createTimeRange called with:', start, end);
     const startIndex = timeSlots.indexOf(start);
     const endIndex = timeSlots.indexOf(end);
-    console.log('Indices:', startIndex, endIndex);
     
     if (startIndex === -1 || endIndex === -1) return [];
     
@@ -113,9 +106,7 @@ const BookPage = () => {
       ? [startIndex, endIndex] 
       : [endIndex, startIndex];
     
-    const result = timeSlots.slice(minIndex, maxIndex + 1);
-    console.log('Range result:', result);
-    return result;
+    return timeSlots.slice(minIndex, maxIndex + 1);
   };
 
   // Get staff list from API response
@@ -147,12 +138,6 @@ const BookPage = () => {
     }, []);
   // Sync initial state from context
   useEffect(() => {
-    console.log('Syncing from context:', {
-      petId: selection.petId,
-      serviceType: selection.serviceType,
-      staffId: selection.staffId,
-      timeSlot: selection.timeSlot
-    });
     setSelectedPet(selection.petId || "");
     setSelectedServiceType(selection.serviceType || "");
     setSelectedStaff(selection.staffId || "");
@@ -161,7 +146,6 @@ const BookPage = () => {
       : typeof selection.timeSlot === "string"
       ? [selection.timeSlot]
       : [];
-    console.log('Setting selectedTimeSlots to:', normalizedSlots);
     setSelectedTimeSlots(normalizedSlots);
   }, [
     selection.petId,
@@ -172,7 +156,6 @@ const BookPage = () => {
 
   // Separate effect to reset rangeStart when service/staff changes
   useEffect(() => {
-    console.log('Service/staff changed, resetting rangeStart');
     setRangeStart(null);
   }, [selection.serviceType, selection.staffId]);
 
@@ -441,7 +424,6 @@ const BookPage = () => {
                         updateSelection({ timeSlot: newSlots });
                         setRangeStart(null); // Reset for next range selection
                       }
-                      console.log('selectedTimeSlots:', selectedTimeSlots);
                     }}
                     className={`py-3 px-4 rounded-lg font-medium transition-all border-2 ${
                       selectedTimeSlots.includes(time)
@@ -485,4 +467,6 @@ const BookPage = () => {
       </div>
     </div>
   );
-}
+};
+
+export default BookPage;

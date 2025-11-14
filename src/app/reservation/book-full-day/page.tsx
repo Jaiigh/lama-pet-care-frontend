@@ -13,11 +13,8 @@ import { getPetsByOwner } from "@/services/petservice";
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
-const PAYMENT_REDIRECT_URL = "https://youtu.be/x3IABpPUcC8?si=Muka58AIAouHswTQ";
 
-// --------------------------
-// Inner page (unchanged logic)
-// --------------------------
+
 const BookFullDayPageInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,6 +27,7 @@ const BookFullDayPageInner = () => {
   const [mstaffData, setMStaffData] = useState<Staff[] | null>(null);
   const [petsData, setPetsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [PAYMENT_REDIRECT_URL,setPAYMENT_REDIRECT_URL] = useState("http://localhost:3000/auth/login");
   const [error, setError] = useState<string | null>(null);
 
   const effectiveStart = useMemo(
