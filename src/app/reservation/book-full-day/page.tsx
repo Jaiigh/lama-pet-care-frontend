@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PetOwnerCardSection from "../section/PetOwnerCardSection";
 import dayjs from "dayjs";
@@ -15,7 +15,10 @@ dayjs.locale("th");
 
 const PAYMENT_REDIRECT_URL = "https://youtu.be/x3IABpPUcC8?si=Muka58AIAouHswTQ";
 
-const BookFullDayPage = () => {
+// --------------------------
+// Inner page (unchanged logic)
+// --------------------------
+const BookFullDayPageInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlStart = searchParams.get("startDate");
@@ -182,7 +185,7 @@ const BookFullDayPage = () => {
     const startMonth = thaiMonths[start.month()];
     const endDay = end.date();
     const endMonth = thaiMonths[end.month()];
-    const year = start.year() + 543; // Convert to Buddhist era
+    const year = start.year() + 543; // Buddhist era
 
     return `สำหรับวัน${startDayName}ที่ ${startDay} - ${endDay} ${endMonth} ${year}`;
   };
@@ -403,4 +406,35 @@ const BookFullDayPage = () => {
   );
 };
 
-export default BookFullDayPage;
+// --------------------------
+// Suspense wrapper (default export)
+// --------------------------
+export default function BookFullDayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#EBF8F4] py-12 px-4 md:px-8">
+          <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-2xl px-6 md:px-12 py-12">
+            <div className="animate-pulse grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-12 items-start">
+              <div className="h-64 w-full bg-gray-200 rounded-xl" />
+              <div className="hidden md:block w-[3px] bg-[#D8D5BD] rounded-full self-stretch md:my-4" />
+              <div className="space-y-6">
+                <div className="h-6 w-48 bg-gray-200 rounded" />
+                <div className="h-4 w-80 bg-gray-200 rounded" />
+                <div className="h-14 w-72 bg-gray-200 rounded" />
+                <div className="h-14 w-72 bg-gray-200 rounded" />
+                <div className="h-14 w-72 bg-gray-200 rounded" />
+                <div className="flex gap-4">
+                  <div className="h-10 w-28 bg-gray-200 rounded" />
+                  <div className="h-10 w-64 bg-gray-200 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <BookFullDayPageInner />
+    </Suspense>
+  );
+}

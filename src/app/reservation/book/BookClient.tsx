@@ -3,79 +3,64 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PetOwnerCardSection from "../section/PetOwnerCardSection";
+import { Staff } from "@/interfaces/reservationFlowInterface";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import { useReservationSelection } from "@/context/ReservationSelectionContext";
-import { getAvailableStaff, type Staff } from "@/services/serviceService";
-import { getPetsByOwner } from "@/services/petservice";
+
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
 const PAYMENT_REDIRECT_URL = "https://youtu.be/x3IABpPUcC8?si=Muka58AIAouHswTQ";
 
-const BookPage = () => {
+const BookClient = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlDate = searchParams.get("date");
   const { selection, updateSelection } = useReservationSelection();
-  const [cstaffData, setCStaffData] = useState<Staff[] | null>(null);
-  const [mstaffData, setMStaffData] = useState<Staff[] | null>(null);
-  const [petsData, setPetsData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const effectiveDate = useMemo(
     () => urlDate || selection.date,
     [urlDate, selection.date]
   );
 
-  useEffect(() => {
-    const fetchStaff = async () => {
-      if (!effectiveDate) return;
+  // Mock staff data
+  const mockStaffList: Staff[] = [
+    {
+      id: "1",
+      name: "อาก้า",
+      avatar: undefined,
+      rating: 4.5,
+      specialization: "Pet Sitting",
+      status: "online",
+    },
+    {
+      id: "2",
+      name: "นาย B",
+      avatar: undefined,
+      rating: 4.8,
+      specialization: "Dog Walking",
+      status: "available",
+    },
+    {
+      id: "3",
+      name: "นาย C",
+      avatar: undefined,
+      rating: 4.2,
+      specialization: "Dog Walking",
+      status: "available",
+    },
+  ];
 
-      try {
-        setLoading(true);
-        const Cdata = await getAvailableStaff({
-          serviceType: "cservice" as any,
-          serviceMode: "partial",
-          startDate: effectiveDate,
-          endDate: effectiveDate,
-        });
-        const Mdata= await getAvailableStaff({
-          serviceType: "mservice" as any,
-          serviceMode: "partial",
-          startDate: effectiveDate,
-          endDate: effectiveDate,
-        });
-        setCStaffData(Cdata);
-        setMStaffData(Mdata);
-      } catch (err: any) {
-        console.error("Failed to fetch staff:", err);
-        setError(err.message || "Failed to load staff data");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Mock pet data
+  const mockPets = [
+    { id: "1", name: "สัตว์เลี้ยง" },
+    { id: "2", name: "โบ้" },
+    { id: "3", name: "แงว" },
+  ];
 
-    fetchStaff();
-  }, [effectiveDate]);
-
-    useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        const pets = await getPetsByOwner();
-        setPetsData(pets);
-      } catch (err: any) {
-        console.error("Failed to fetch pets:", err);
-        // Keep empty array for pets if fetch fails
-        setPetsData([]);
-      }
-    };
-
-    fetchPets();
-  }, []);
-
+  // Mock time slots
   const timeSlots = [
     "08:00",
     "09:00",
@@ -93,66 +78,9 @@ const BookPage = () => {
   >("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
-  const [rangeStart, setRangeStart] = useState<string | null>(null);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log('State changed - rangeStart:', rangeStart, 'selectedTimeSlots:', selectedTimeSlots);
-  }, [rangeStart, selectedTimeSlots]);
-
-  // Create continuous time range between start and end
-  const createTimeRange = (start: string, end: string): string[] => {
-    console.log('createTimeRange called with:', start, end);
-    const startIndex = timeSlots.indexOf(start);
-    const endIndex = timeSlots.indexOf(end);
-    console.log('Indices:', startIndex, endIndex);
-    
-    if (startIndex === -1 || endIndex === -1) return [];
-    
-    const [minIndex, maxIndex] = startIndex <= endIndex 
-      ? [startIndex, endIndex] 
-      : [endIndex, startIndex];
-    
-    const result = timeSlots.slice(minIndex, maxIndex + 1);
-    console.log('Range result:', result);
-    return result;
-  };
-
-  // Get staff list from API response
-  const staffList = useMemo(() => {
-    let result: Staff[] = [];
-    if (selectedServiceType === "mservice") {
-      result = Array.isArray(mstaffData) ? mstaffData : [];
-    } else if (selectedServiceType === "cservice") {
-      result = Array.isArray(cstaffData) ? cstaffData : [];
-    } else {
-      result = [];
-    }
-    return result;
-  }, [cstaffData, mstaffData, selectedServiceType]);
-
-    useEffect(() => {
-      const fetchPets = async () => {
-        try {
-          const pets = await getPetsByOwner();
-          setPetsData(pets);
-        } catch (err: any) {
-          console.error("Failed to fetch pets:", err);
-          // Keep empty array for pets if fetch fails
-          setPetsData([]);
-        }
-      };
-  
-      fetchPets();
-    }, []);
   // Sync initial state from context
   useEffect(() => {
-    console.log('Syncing from context:', {
-      petId: selection.petId,
-      serviceType: selection.serviceType,
-      staffId: selection.staffId,
-      timeSlot: selection.timeSlot
-    });
     setSelectedPet(selection.petId || "");
     setSelectedServiceType(selection.serviceType || "");
     setSelectedStaff(selection.staffId || "");
@@ -161,7 +89,6 @@ const BookPage = () => {
       : typeof selection.timeSlot === "string"
       ? [selection.timeSlot]
       : [];
-    console.log('Setting selectedTimeSlots to:', normalizedSlots);
     setSelectedTimeSlots(normalizedSlots);
   }, [
     selection.petId,
@@ -169,12 +96,6 @@ const BookPage = () => {
     selection.staffId,
     selection.timeSlot,
   ]);
-
-  // Separate effect to reset rangeStart when service/staff changes
-  useEffect(() => {
-    console.log('Service/staff changed, resetting rangeStart');
-    setRangeStart(null);
-  }, [selection.serviceType, selection.staffId]);
 
   // Ensure date is stored for subsequent pages
   useEffect(() => {
@@ -247,9 +168,7 @@ const BookPage = () => {
       window.location.href = PAYMENT_REDIRECT_URL;
     }
   };
-  const handleSelectStaffChange = (staffId: string) => {
-    
-  }
+
   return (
     <div className="min-h-screen bg-[#EBF8F4] py-12 px-4 md:px-8">
       <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-2xl px-6 md:px-12 py-12">
@@ -286,14 +205,14 @@ const BookPage = () => {
                   }}
                   className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
                 >
-                  <option value="">
-                    {loading ? "กำลังโหลด..." : "สัตว์เลี้ยง"}
-                  </option>
-                  {petsData.map((pet) => (
-                    <option key={pet.pet_id} value={pet.pet_id}>
-                      {pet.name}
-                    </option>
-                  ))}
+                  <option value="">สัตว์เลี้ยง</option>
+                  {mockPets
+                    .filter((pet) => pet.id !== "1")
+                    .map((pet) => (
+                      <option key={pet.id} value={pet.id}>
+                        {pet.name}
+                      </option>
+                    ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg
@@ -334,7 +253,6 @@ const BookPage = () => {
                     });
                     setSelectedStaff("");
                     setSelectedTimeSlots([]);
-                    setRangeStart(null);
                   }}
                   className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
                 >
@@ -371,21 +289,17 @@ const BookPage = () => {
                   onChange={(e) => {
                     const value = e.target.value;
                     setSelectedStaff(value);
-                    handleSelectStaffChange(value);
                     updateSelection({
                       staffId: value || null,
                       // clear timeslot when changing staff to avoid mismatched data
                       timeSlot: [],
                     });
                     setSelectedTimeSlots([]);
-                    setRangeStart(null);
                   }}
                   className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
                 >
-                  <option value="">
-                    {loading ? "กำลังโหลด..." : "เลือก staff"}
-                  </option>
-                  {Array.isArray(staffList) && staffList.map((staff) => (
+                  <option value="">เลือก staff</option>
+                  {mockStaffList.map((staff) => (
                     <option key={staff.id} value={staff.id}>
                       {staff.name}
                     </option>
@@ -411,43 +325,26 @@ const BookPage = () => {
 
             {/* 4. เลือกช่วงเวลาที่ต้องการ */}
             <div className="mb-8">
-              <label className="block mb-2 font-medium text-gray-700">
+              <label className="block mb-4 font-medium text-gray-700">
                 4. เลือกช่วงเวลาที่ต้องการ
               </label>
-              <p className="text-sm text-gray-500 mb-4">
-                คลิกเวลาที่ต้องการเพื่อเลือกจุดเริ่มต้น จากนั้นคลิกเวลาสิ้นสุดเพื่อสร้างช่วงเวลาต่อเนื่อง
-              </p>
               <div className="grid grid-cols-4 md:grid-cols-4 gap-3">
                 {timeSlots.map((time) => (
                   <button
                     key={time}
                     onClick={() => {
-                 
-                      
-                      if (!rangeStart) {
-                        // Set as range start (don't select yet, don't update context yet)
-                        setRangeStart(time);
-                        setSelectedTimeSlots([]);
-                        // Don't call updateSelection here - wait until range is complete
-                      } else if (rangeStart === time) {
-                        // Clicking the same slot - reset
-                        setRangeStart(null);
-                        setSelectedTimeSlots([]);
-                        updateSelection({ timeSlot: [] });
-                      } else {
-                        // Create range between start and clicked slot
-                        const newSlots = createTimeRange(rangeStart, time);
-                        setSelectedTimeSlots(newSlots);
-                        updateSelection({ timeSlot: newSlots });
-                        setRangeStart(null); // Reset for next range selection
-                      }
-                      console.log('selectedTimeSlots:', selectedTimeSlots);
+                      setSelectedTimeSlots((prev) => {
+                        const alreadySelected = prev.includes(time);
+                        const next = alreadySelected
+                          ? prev.filter((slot) => slot !== time)
+                          : [...prev, time];
+                        updateSelection({ timeSlot: next });
+                        return next;
+                      });
                     }}
                     className={`py-3 px-4 rounded-lg font-medium transition-all border-2 ${
                       selectedTimeSlots.includes(time)
                         ? "bg-[#61C5AA] text-white border-[#61C5AA] shadow-md"
-                        : rangeStart === time
-                        ? "bg-yellow-100 border-yellow-400 text-yellow-800"
                         : "bg-white border-gray-200 text-gray-800 hover:border-[#61C5AA] hover:bg-[#EBF8F4]"
                     }`}
                   >
@@ -485,4 +382,6 @@ const BookPage = () => {
       </div>
     </div>
   );
-}
+};
+
+export default BookClient;
