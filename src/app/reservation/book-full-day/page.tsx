@@ -31,7 +31,7 @@ const BookFullDayPageInner = () => {
   const [petsData, setPetsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
- 
+
   const effectiveStart = useMemo(
     () => urlStart || selection.startDate,
     [urlStart, selection.startDate]
@@ -54,7 +54,7 @@ const BookFullDayPageInner = () => {
           startDate: effectiveStart,
           endDate: effectiveEnd,
         });
-        const Mdata= await getAvailableStaff({
+        const Mdata = await getAvailableStaff({
           serviceType: "mservice" as any,
           serviceMode: "full-day",
           startDate: effectiveStart,
@@ -94,6 +94,20 @@ const BookFullDayPageInner = () => {
     "" | "mservice" | "cservice"
   >("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
+
+  // Time slots for dropdown
+  const timeSlots = [
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+  ];
 
   // Get staff list from API response
   const staffList = useMemo(() => {
@@ -196,9 +210,13 @@ const BookFullDayPageInner = () => {
       !selectedServiceType ||
       !selectedStaff ||
       !effectiveStart ||
-      !effectiveEnd
+      !effectiveEnd ||
+      !startTime ||
+      !endTime
     ) {
-      alert("กรุณาเลือกสัตว์เลี้ยง, ประเภทบริการ และ staff ก่อน");
+      alert(
+        "กรุณาเลือกสัตว์เลี้ยง, ประเภทบริการ, staff, เวลาเริ่ม และเวลาจบ ก่อน"
+      );
       return;
     }
 
@@ -216,7 +234,8 @@ const BookFullDayPageInner = () => {
     }
   };
 
-  const canProceed = selectedPet && selectedServiceType && selectedStaff;
+  const canProceed =
+    selectedPet && selectedServiceType && selectedStaff && startTime && endTime;
 
   return (
     <div className="min-h-screen bg-[#EBF8F4] py-12 px-4 md:px-8">
@@ -333,9 +352,7 @@ const BookFullDayPageInner = () => {
                 3. staff
               </label>
               {error && (
-                <div className="text-red-500 text-sm mb-2">
-                  {error}
-                </div>
+                <div className="text-red-500 text-sm mb-2">{error}</div>
               )}
               <div className="flex items-center gap-4">
                 <div className="relative w-full md:w-[280px]">
@@ -352,11 +369,12 @@ const BookFullDayPageInner = () => {
                     <option value="">
                       {loading ? "กำลังโหลด..." : "เลือก staff"}
                     </option>
-                    {Array.isArray(staffList) && staffList.map((staff) => (
-                      <option key={staff.id} value={staff.id}>
-                        {staff.name}
-                      </option>
-                    ))}
+                    {Array.isArray(staffList) &&
+                      staffList.map((staff) => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.name}
+                        </option>
+                      ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg
@@ -372,6 +390,90 @@ const BookFullDayPageInner = () => {
                         d="M19 9l-7 7-7-7"
                       />
                     </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. เวลาเริ่มและเวลาจบ */}
+            <div className="mb-6">
+              <label className="block mb-3 font-medium text-gray-700">
+                4. เวลาเริ่มและเวลาจบ
+              </label>
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* เวลาเริ่มของวันแรก */}
+                <div className="relative w-full md:w-[280px]">
+                  <label className="block mb-2 text-sm text-gray-600">
+                    เวลาเริ่มของวันแรก
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={startTime}
+                      onChange={(e) => {
+                        setStartTime(e.target.value);
+                      }}
+                      className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                    >
+                      <option value="">เลือกเวลาเริ่ม</option>
+                      {timeSlots.map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* เวลาจบของวันสุดท้าย */}
+                <div className="relative w-full md:w-[280px]">
+                  <label className="block mb-2 text-sm text-gray-600">
+                    เวลาจบของวันสุดท้าย
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={endTime}
+                      onChange={(e) => {
+                        setEndTime(e.target.value);
+                      }}
+                      className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                    >
+                      <option value="">เลือกเวลาจบ</option>
+                      {timeSlots.map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
