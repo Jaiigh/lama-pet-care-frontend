@@ -4,8 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Edit2, Trash2 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
-import { environment } from "@/env/environment";
 import { useAdminSession } from "@/components/admin/AdminSessionProvider";
+import {
+  deleteUserByAdmin as apiDeleteUserByAdmin,
+  fetchAdminUsers as apiFetchAdminUsers,
+  registerUser as apiRegisterUser,
+} from "@/services/adminApi";
 
 type Role = "Owner" | "Caretaker" | "Doctor";
 
@@ -29,9 +33,6 @@ type CreateFormState = {
   specialization: string;
 };
 
-type ApiError = Error & { code?: number };
-
-const API_BASE = environment.masterUrl;
 const PAGE_SIZE = 20;
 
 const roleStyles: Record<Role, string> = {
@@ -87,25 +88,6 @@ export default function UsersPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const authorizedFetch = useCallback(
-    (path: string, init?: RequestInit) => {
-      if (!token) {
-        throw new Error("Missing admin token");
-      }
-      const headers = new Headers(init?.headers ?? {});
-      if (init?.body && !headers.has("Content-Type")) {
-        headers.set("Content-Type", "application/json");
-      }
-      headers.set("Authorization", `Bearer ${token}`);
-      return fetch(`${API_BASE}${path}`, {
-        ...init,
-        headers,
-        cache: "no-store",
-      });
-    },
-    [token],
-  );
-
   const loadUsers = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -116,22 +98,11 @@ export default function UsersPage() {
       let currentPage = 1;
 
       while (true) {
-        const params = new URLSearchParams({
-          page: String(currentPage),
-          limit: String(PAGE_SIZE),
+        const json = await apiFetchAdminUsers(token, {
+          page: currentPage,
+          limit: PAGE_SIZE,
         });
-        const response = await authorizedFetch(`/admin/users?${params.toString()}`);
-        if (!response.ok) {
-          throw createApiError(
-            response.status === 401
-              ? "สิทธิ์ของผู้ดูแลหมดอายุหรือไม่ถูกต้อง"
-              : "ไม่สามารถโหลดข้อมูลผู้ใช้จาก API ได้",
-            response.status,
-          );
-        }
-
-        const json = await response.json();
-        const normalized = normalizeUserCollection(json?.data ?? json);
+        const normalized = normalizeUserCollection(json);
         const withoutCurrent =
           adminProfile?.userId != null
             ? normalized.filter((user) => user.userId !== adminProfile.userId)
@@ -160,7 +131,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [adminProfile?.userId, authorizedFetch, token]);
+  }, [adminProfile?.userId, token]);
 
   useEffect(() => {
     if (!token) return;
@@ -249,20 +220,7 @@ export default function UsersPage() {
         payload.license_number = createForm.license;
       }
 
-      const response = await fetch(
-        `${API_BASE}/auth/register/${createForm.role.toLowerCase()}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-      if (!response.ok) {
-        const message = await extractErrorMessage(response);
-        throw createApiError(message ?? "ไม่สามารถสร้างผู้ใช้ได้", response.status);
-      }
+      await apiRegisterUser(createForm.role.toLowerCase(), payload);
 
       setCreateOpen(false);
       setCreateForm(initialCreateForm);
@@ -282,13 +240,7 @@ export default function UsersPage() {
     setDeleting(true);
     setErrorMessage(null);
     try {
-      const response = await authorizedFetch(
-        `/admin/users/${encodeURIComponent(pendingDelete.userId)}`,
-        { method: "DELETE" },
-      );
-      if (!response.ok) {
-        throw createApiError("ลบผู้ใช้ไม่สำเร็จ", response.status);
-      }
+      await apiDeleteUserByAdmin(token, pendingDelete.userId);
       setPendingDelete(null);
       await loadUsers();
     } catch (err) {
@@ -690,21 +642,4 @@ function formatDate(value?: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   return date.toISOString().slice(0, 10);
-}
-
-function createApiError(message: string, code?: number): ApiError {
-  const error = new Error(message) as ApiError;
-  if (code) error.code = code;
-  return error;
-}
-
-async function extractErrorMessage(response: Response): Promise<string | null> {
-  try {
-    const data = await response.json();
-    if (typeof data?.message === "string") return data.message;
-    if (typeof data?.error === "string") return data.error;
-    return null;
-  } catch {
-    return null;
-  }
 }
