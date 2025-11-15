@@ -23,7 +23,7 @@ export const getProfile = async (): Promise<Profile> => {
     const data = json.data;
     const profile: Profile = {
       name: data.name,
-      user_id: data.user_id, //this is bullshit -> fix later
+      user_id: data.show_id,
       telephone_number: data.telephone_number,
       email: data.email,
       created_at: data.created_at,
@@ -38,15 +38,17 @@ export const getProfile = async (): Promise<Profile> => {
 };
 
 export const updateProfile = async (
-  user_id: string,
   profileData: Partial<Profile>
 ): Promise<Profile> => {
   console.log("updating...");
   try {
-    const response = await fetch(ownerURL + user_id, {
+    const storedToken =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const response = await fetch(ownerURL , {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${storedToken}`,
       },
       body: JSON.stringify(profileData),
     });
@@ -58,7 +60,7 @@ export const updateProfile = async (
     console.log(data);
     const updatedProfile: Profile = {
       name: data.name,
-      user_id: data.user_id, //this is bullshit -> fix later
+      user_id: data.show_id,
       telephone_number: data.telephone_number,
       email: data.email,
       created_at: data.created_at,

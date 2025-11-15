@@ -7,8 +7,27 @@ import { use, useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { getProfile } from "@/services/profileService";
 
+import { Pet, PetsApiResponse } from "@/interfaces/profileInterface";
+import { getMyPets } from "@/services/profileService";
+
+import dayjs from 'dayjs';
+
 function Display() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [pets, setPets] = useState<Pet[] | null>(null);
+
+  useEffect(() => {
+        const fetchReservations = async () => {
+          try {
+            const response : Pet[] = await getMyPets();
+            setPets(response);
+          } catch (error) {
+            console.error("Error fetching pets:", error);
+          }
+        };
+        fetchReservations();
+      }, []);
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -49,15 +68,11 @@ function Display() {
         </div>
         <div className="flex flex-row flex-wrap gap-[10px]">
           <div className="text-center w-[45%] text-[#072568] bg-[#EAFFF9] px-[30px] py-[15px] rounded-[10px] text-sm">
-            <div>X</div>
+            <div>{(pets ?? []).length}</div>
             <div>สัตว์เลี้ยง</div>
           </div>
           <div className="text-center w-[45%] text-[#072568] bg-[#EAFFF9] px-[30px] py-[15px] rounded-[10px] text-sm">
-            <div>X</div>
-            <div>บริการที่ใช้</div>
-          </div>
-          <div className="text-center w-[45%] text-[#072568] bg-[#EAFFF9] px-[30px] py-[15px] rounded-[10px] text-sm">
-            <div>X</div>
+            <div>{dayjs().diff(profile?.created_at, 'years')}</div>
             <div>ปีที่เป็นสมาชิก</div>
           </div>
         </div>
