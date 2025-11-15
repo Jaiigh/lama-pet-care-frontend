@@ -6,6 +6,55 @@ import {
   ReviewResponse,
 } from "@/interfaces/reviewInterface";
 
+// Type definitions for API responses
+interface ApiService {
+  service_id?: string;
+  SID?: string;
+  staff_id?: string;
+  CID?: string;
+  caretaker_id?: string;
+  pet_id?: string;
+  PETID?: string;
+  status?: string;
+  reserve_date_start?: string;
+  rdate_start?: string;
+  reserve_date_end?: string;
+  rdate_end?: string;
+  staff?: {
+    name?: string;
+    profile_image?: string;
+  };
+  caretaker?: {
+    name?: string;
+    profile_image?: string;
+  };
+  staff_name?: string;
+  caretaker_name?: string;
+  staff_avatar?: string;
+  caretaker_avatar?: string;
+  review_score?: number;
+  rating?: number;
+  review_comment?: string;
+  comment?: string;
+  review?: {
+    score?: number;
+    comment?: string;
+  };
+}
+
+interface ApiReview {
+  SID?: string;
+  service_id?: string;
+  CID?: string;
+  caretaker_id?: string;
+  staff_id?: string;
+  score?: number;
+  rating?: number;
+  comment?: string;
+  review_comment?: string;
+  service?: ApiService;
+}
+
 // Use API_BASE which includes /api/v1, or fallback to environment.masterUrl
 const baseURL =
   API_BASE || environment.masterUrl.replace(/\/api\/?v?\d*$/, "") + "/api/v1";
@@ -160,7 +209,7 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
 
     // All services returned should already be "finish" status from the API filter
     // But double-check to ensure only "finish" status services are shown
-    const finishedServices = services.filter((service: any) => {
+    const finishedServices = (services as ApiService[]).filter((service) => {
       const status = (service.status || "").toLowerCase().trim();
       return status === "finish" || status === "finished";
     });
@@ -179,104 +228,110 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
 
       if (reviewsResponse.ok) {
         const reviewsData = await reviewsResponse.json();
-        reviewedServiceIds =
-          reviewsData.data?.map(
-            (review: any) => review.SID || review.service_id
-          ) ||
-          reviewsData.map((review: any) => review.SID || review.service_id) ||
-          [];
+        const reviewsArray = (reviewsData.data || reviewsData) as ApiReview[];
+        reviewedServiceIds = reviewsArray.map(
+          (review) => review.SID || review.service_id || ""
+        );
       }
-    } catch (reviewErr) {
+    } catch {
       // Reviews endpoint not available, will check services individually
     }
 
     // Filter out services that already have reviews
-    const unreviewedServices = finishedServices.filter((service: any) => {
+    const unreviewedServices = finishedServices.filter((service) => {
       const serviceId = service.service_id || service.SID;
-      return !reviewedServiceIds.includes(serviceId);
+      return serviceId && !reviewedServiceIds.includes(serviceId);
     });
 
     // Transform to ServiceReview format and fetch caretaker/pet details
     // Use the service data directly without fetching individual service details to avoid duplicates
     return await Promise.all(
-      unreviewedServices.map(async (service: any) => {
-        const serviceId = service.service_id || service.SID;
-        const staffId = service.staff_id || service.CID || service.caretaker_id;
-        const petId = service.pet_id || service.PETID;
+      unreviewedServices
+        .filter((service) => {
+          // Only process services with valid IDs
+          return !!(service.service_id || service.SID);
+        })
+        .map(async (service) => {
+          const serviceId = service.service_id || service.SID || "";
+          const staffId =
+            service.staff_id || service.CID || service.caretaker_id || "";
+          const petId = service.pet_id || service.PETID || "";
 
-        // Use service data directly - no need to fetch individual service details
-        const serviceDetail: any = service;
+          // Use service data directly - no need to fetch individual service details
+          const serviceDetail: ApiService = service;
 
-        // Fetch caretaker/user details
-        // Check all possible fields for caretaker info in service data
-        let staffName =
-          serviceDetail.staff?.name ||
-          serviceDetail.caretaker?.name ||
-          serviceDetail.staff_name ||
-          serviceDetail.caretaker_name ||
-          service.staff?.name ||
-          service.caretaker?.name ||
-          service.staff_name ||
-          service.caretaker_name;
+          // Fetch caretaker/user details
+          // Check all possible fields for caretaker info in service data
+          let staffName =
+            serviceDetail.staff?.name ||
+            serviceDetail.caretaker?.name ||
+            serviceDetail.staff_name ||
+            serviceDetail.caretaker_name ||
+            service.staff?.name ||
+            service.caretaker?.name ||
+            service.staff_name ||
+            service.caretaker_name;
 
-        let staffAvatar: string | undefined =
-          serviceDetail.staff?.profile_image ||
-          serviceDetail.caretaker?.profile_image ||
-          serviceDetail.staff_avatar ||
-          serviceDetail.caretaker_avatar ||
-          service.staff?.profile_image ||
-          service.caretaker?.profile_image ||
-          service.staff_avatar ||
-          service.caretaker_avatar;
+          let staffAvatar: string | undefined =
+            serviceDetail.staff?.profile_image ||
+            serviceDetail.caretaker?.profile_image ||
+            serviceDetail.staff_avatar ||
+            serviceDetail.caretaker_avatar ||
+            service.staff?.profile_image ||
+            service.caretaker?.profile_image ||
+            service.staff_avatar ||
+            service.caretaker_avatar;
 
-        // If we don't have the name, try to fetch it
-        if ((!staffName || staffName === "Caretaker") && staffId) {
-          const caretakerInfo = await fetchUserDetails(staffId, storedToken);
-          if (
-            caretakerInfo &&
-            caretakerInfo.name &&
-            caretakerInfo.name !== "Unknown"
-          ) {
-            staffName = caretakerInfo.name;
-            staffAvatar = caretakerInfo.profile_image || staffAvatar;
+          // If we don't have the name, try to fetch it
+          if ((!staffName || staffName === "Caretaker") && staffId) {
+            const caretakerInfo = await fetchUserDetails(staffId, storedToken);
+            if (
+              caretakerInfo &&
+              caretakerInfo.name &&
+              caretakerInfo.name !== "Unknown"
+            ) {
+              staffName = caretakerInfo.name;
+              staffAvatar = caretakerInfo.profile_image || staffAvatar;
+            }
           }
-        }
 
-        // If still no name, use staff_id instead of "Caretaker"
-        if (!staffName || staffName === "Caretaker") {
-          staffName = staffId || "Unknown";
-        }
-
-        // Fetch pet details
-        let petName = "Pet";
-        if (petId) {
-          const petInfo = await fetchPetDetails(petId, storedToken);
-          if (petInfo) {
-            petName = petInfo.name;
+          // If still no name, use staff_id instead of "Caretaker"
+          if (!staffName || staffName === "Caretaker") {
+            staffName = staffId || "Unknown";
           }
-        }
 
-        return {
-          service_id: serviceId,
-          staff_id: staffId || "",
-          staff_name: staffName,
-          staff_avatar: staffAvatar,
-          pet_id: petId || "",
-          pet_name: petName,
-          reserve_date_start:
-            serviceDetail.reserve_date_start ||
-            serviceDetail.rdate_start ||
-            service.reserve_date_start ||
-            service.rdate_start,
-          reserve_date_end:
-            serviceDetail.reserve_date_end ||
-            serviceDetail.rdate_end ||
-            service.reserve_date_end ||
-            service.rdate_end,
-          status: serviceDetail.status || service.status,
-          has_review: false,
-        };
-      })
+          // Fetch pet details
+          let petName = "Pet";
+          if (petId) {
+            const petInfo = await fetchPetDetails(petId, storedToken);
+            if (petInfo) {
+              petName = petInfo.name;
+            }
+          }
+
+          return {
+            service_id: serviceId,
+            staff_id: staffId,
+            staff_name: staffName,
+            staff_avatar: staffAvatar,
+            pet_id: petId,
+            pet_name: petName,
+            reserve_date_start:
+              serviceDetail.reserve_date_start ||
+              serviceDetail.rdate_start ||
+              service.reserve_date_start ||
+              service.rdate_start ||
+              "",
+            reserve_date_end:
+              serviceDetail.reserve_date_end ||
+              serviceDetail.rdate_end ||
+              service.reserve_date_end ||
+              service.rdate_end ||
+              "",
+            status: serviceDetail.status || service.status || "",
+            has_review: false,
+          };
+        })
     );
   } catch (err) {
     console.error("Error fetching unreviewed services:", err);
@@ -298,7 +353,7 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
 
   try {
     // Try to fetch from the cservice reviews endpoint
-    let reviews: any[] = [];
+    let reviews: ApiReview[] = [];
 
     try {
       const response = await fetch(`${reviewURL}`, {
@@ -311,9 +366,9 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
 
       if (response.ok) {
         const json = await response.json();
-        reviews = json.data || json || [];
+        reviews = (json.data || json || []) as ApiReview[];
       }
-    } catch (err) {
+    } catch {
       // Error fetching from /cservice/ endpoint, will try alternative method
     }
 
@@ -340,7 +395,7 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
           // Check each service individually to see if it has a review
           // We'll fetch service details to check for review_score or review fields
           const servicesWithReviews = await Promise.all(
-            allServices.map(async (service: any) => {
+            (allServices as ApiService[]).map(async (service) => {
               const serviceId = service.service_id || service.SID;
               try {
                 const serviceDetailResponse = await fetch(
@@ -365,7 +420,7 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
                     serviceDetail.review ||
                     serviceDetail.rating !== undefined
                   ) {
-                    return {
+                    const reviewData: ApiReview = {
                       SID: serviceId,
                       service_id: serviceId,
                       CID:
@@ -388,16 +443,19 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
                         serviceDetail.review?.comment,
                       service: serviceDetail,
                     };
+                    return reviewData;
                   }
                 }
-              } catch (err) {
+              } catch {
                 // Error checking service for review, skip it
               }
               return null;
             })
           );
 
-          reviews = servicesWithReviews.filter((r: any) => r !== null);
+          reviews = servicesWithReviews.filter(
+            (r): r is ApiReview => r !== null
+          );
         }
       } catch (err) {
         console.error("Error fetching services to check for reviews:", err);
@@ -410,108 +468,116 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
 
     // Fetch service details and caretaker/pet info for each review
     const reviewedServices: ServiceReview[] = await Promise.all(
-      reviews.map(async (review: any) => {
-        const serviceId = review.SID || review.service_id;
-        const caretakerId =
-          review.CID || review.caretaker_id || review.staff_id;
+      reviews
+        .filter((review) => {
+          // Only process reviews with valid service IDs
+          return !!(review.SID || review.service_id);
+        })
+        .map(async (review) => {
+          const serviceId = review.SID || review.service_id || "";
+          const caretakerId =
+            review.CID || review.caretaker_id || review.staff_id || "";
 
-        // Use service data if already available (from direct service fetch)
-        let serviceDetail: any = review.service || {};
+          // Use service data if already available (from direct service fetch)
+          let serviceDetail: ApiService = review.service || {};
 
-        // If we don't have service detail, fetch it
-        if (!serviceDetail.service_id && !serviceDetail.SID) {
-          try {
-            const serviceResponse = await fetch(`${serviceURL}${serviceId}`, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${storedToken}`,
-              },
-            });
+          // If we don't have service detail, fetch it
+          if (!serviceDetail.service_id && !serviceDetail.SID) {
+            try {
+              const serviceResponse = await fetch(`${serviceURL}${serviceId}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${storedToken}`,
+                },
+              });
 
-            if (serviceResponse.ok) {
-              const serviceData = await serviceResponse.json();
-              serviceDetail = serviceData.data || serviceData;
+              if (serviceResponse.ok) {
+                const serviceData = await serviceResponse.json();
+                serviceDetail = (serviceData.data || serviceData) as ApiService;
+              }
+            } catch {
+              // Error fetching service, continue with available data
             }
-          } catch (err) {
-            // Error fetching service, continue with available data
           }
-        }
 
-        const petId = serviceDetail.pet_id || serviceDetail.PETID;
+          const petId = serviceDetail.pet_id || serviceDetail.PETID;
 
-        // Fetch caretaker/user details - check all possible fields
-        let staffName =
-          serviceDetail.staff?.name ||
-          serviceDetail.caretaker?.name ||
-          serviceDetail.staff_name ||
-          serviceDetail.caretaker_name;
+          // Fetch caretaker/user details - check all possible fields
+          let staffName =
+            serviceDetail.staff?.name ||
+            serviceDetail.caretaker?.name ||
+            serviceDetail.staff_name ||
+            serviceDetail.caretaker_name;
 
-        let staffAvatar: string | undefined =
-          serviceDetail.staff?.profile_image ||
-          serviceDetail.caretaker?.profile_image ||
-          serviceDetail.staff_avatar ||
-          serviceDetail.caretaker_avatar;
+          let staffAvatar: string | undefined =
+            serviceDetail.staff?.profile_image ||
+            serviceDetail.caretaker?.profile_image ||
+            serviceDetail.staff_avatar ||
+            serviceDetail.caretaker_avatar;
 
-        // If we don't have the name, try to fetch it (but don't fail if it doesn't work)
-        if ((!staffName || staffName === "Caretaker") && caretakerId) {
-          try {
-            const caretakerInfo = await fetchUserDetails(
-              caretakerId,
-              storedToken
-            );
-            if (
-              caretakerInfo &&
-              caretakerInfo.name &&
-              caretakerInfo.name !== "Unknown"
-            ) {
-              staffName = caretakerInfo.name;
-              staffAvatar = caretakerInfo.profile_image || staffAvatar;
+          // If we don't have the name, try to fetch it (but don't fail if it doesn't work)
+          if ((!staffName || staffName === "Caretaker") && caretakerId) {
+            try {
+              const caretakerInfo = await fetchUserDetails(
+                caretakerId,
+                storedToken
+              );
+              if (
+                caretakerInfo &&
+                caretakerInfo.name &&
+                caretakerInfo.name !== "Unknown"
+              ) {
+                staffName = caretakerInfo.name;
+                staffAvatar = caretakerInfo.profile_image || staffAvatar;
+              }
+            } catch {
+              // Silently fail - we'll use staff_id instead
             }
-          } catch (err) {
-            // Silently fail - we'll use staff_id instead
           }
-        }
 
-        // If still no name, use staff_id instead of "Caretaker"
-        if (!staffName || staffName === "Caretaker") {
-          staffName = caretakerId || "Unknown";
-        }
-
-        // Fetch pet details
-        let petName = "Pet";
-        if (petId) {
-          const petInfo = await fetchPetDetails(petId, storedToken);
-          if (petInfo) {
-            petName = petInfo.name;
+          // If still no name, use staff_id instead of "Caretaker"
+          if (!staffName || staffName === "Caretaker") {
+            staffName = caretakerId || "Unknown";
           }
-        }
 
-        return {
-          service_id: serviceId,
-          staff_id: caretakerId || "",
-          staff_name: staffName,
-          staff_avatar: staffAvatar,
-          pet_id: petId || "",
-          pet_name: petName,
-          reserve_date_start:
-            serviceDetail.reserve_date_start || serviceDetail.rdate_start || "",
-          reserve_date_end:
-            serviceDetail.reserve_date_end || serviceDetail.rdate_end || "",
-          status: serviceDetail.status || "completed",
-          has_review: true,
-          review_score:
-            review.score ||
-            review.rating ||
-            serviceDetail.review_score ||
-            serviceDetail.rating,
-          review_comment:
-            review.comment ||
-            review.review_comment ||
-            serviceDetail.review_comment ||
-            serviceDetail.comment,
-        };
-      })
+          // Fetch pet details
+          let petName = "Pet";
+          const finalPetId = petId || "";
+          if (finalPetId) {
+            const petInfo = await fetchPetDetails(finalPetId, storedToken);
+            if (petInfo) {
+              petName = petInfo.name;
+            }
+          }
+
+          return {
+            service_id: serviceId,
+            staff_id: caretakerId,
+            staff_name: staffName,
+            staff_avatar: staffAvatar,
+            pet_id: finalPetId,
+            pet_name: petName,
+            reserve_date_start:
+              serviceDetail.reserve_date_start ||
+              serviceDetail.rdate_start ||
+              "",
+            reserve_date_end:
+              serviceDetail.reserve_date_end || serviceDetail.rdate_end || "",
+            status: serviceDetail.status || "completed",
+            has_review: true,
+            review_score:
+              review.score ||
+              review.rating ||
+              serviceDetail.review_score ||
+              serviceDetail.rating,
+            review_comment:
+              review.comment ||
+              review.review_comment ||
+              serviceDetail.review_comment ||
+              serviceDetail.comment,
+          };
+        })
     );
 
     return reviewedServices;
@@ -561,9 +627,9 @@ export const submitRating = async (
 
     // Handle errors
     const errorText = await patchResponse.text().catch(() => "");
-    let errorData: any = {};
+    let errorData: { message?: string } = {};
     try {
-      errorData = await patchResponse.json();
+      errorData = (await patchResponse.json()) as { message?: string };
     } catch {
       errorData = { message: errorText || patchResponse.statusText };
     }
