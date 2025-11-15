@@ -3,12 +3,15 @@
 import { use, useEffect, useState } from "react";
 import { Reservation, ReservationApiResponse } from "@/interfaces/reservationInterface";
 import { Payment, PaymentApiResponse } from "@/interfaces/paymentInterface";
-import { getAllReservation } from "@/services/reservationService";
+import { getAllReservation, updateReservationStatus } from "@/services/reservationService";
 import { getAllPayment } from "@/services/paymentService";
 
 export default function Home() {
+
+  //------------ fetch reservations --------------
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [fetchTrigger, setFetchTrigger] = useState<number>(0);
   
     useEffect(() => {
       const fetchReservations = async () => {
@@ -30,7 +33,7 @@ export default function Home() {
         }
       };
       fetchPayments();
-    }, []);
+    }, [fetchTrigger]);
 
   const paymentMap = payments.reduce((map, payment) => {
         map[payment.payment_id] = payment;
@@ -54,6 +57,30 @@ export default function Home() {
         return "bg-gray-200 text-black";
     }
   };
+
+  // ----------- reservation status update --------------
+  const UserRole = typeof window !== "undefined" ? localStorage.getItem("role") : null;
+  const CanChangeStatusRole = ["doctor", "caretaker"];
+  const canChangeStatus = UserRole && CanChangeStatusRole.includes(UserRole);
+const [openReservationId, setOpenReservationId] = useState<string | null>(null);
+
+  const handleUpdateStatus = async (newStatus: string, reservationId: string) => {
+    try {
+      const response = await updateReservationStatus(reservationId, newStatus);
+      if (response){
+        console.log("Reservation status updated successfully");
+        setFetchTrigger((prev) => prev + 1);
+      }
+    }
+    catch (error) {
+      console.error("Error updating reservation status:", error);
+    }
+  }
+
+  const handleSelectStatus = (newStatus: string, reservationId: string) => {
+    setOpenReservationId(null);
+    handleUpdateStatus(newStatus, reservationId);
+  }
 
   return (
     <div className="reserve-management p-5">
@@ -86,9 +113,34 @@ export default function Home() {
                     </div>
                     <div className="detail-group flex flex-col items-start gap-1">
                         <div className="label text-[13px]">สถานะ</div>
-                        <div className={`text-[16px] font-bold px-10 py-1.5 rounded-[15px] ${getStatusClass(reserve.status)}`}>
-                          {reserve.status}
-                        </div>
+                        {canChangeStatus ? (
+                          <div className="relative">
+                            <button 
+                              className={`text-[16px] font-bold px-8 py-1.5 rounded-[15px] ${getStatusClass(reserve.status)}`}
+                              onClick={() => setOpenReservationId(openReservationId === reserve.service_id ? null : reserve.service_id)}
+                              >
+                                {reserve.status} &#9660;
+                            </button>
+                            {openReservationId === reserve.service_id && (
+                              <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                                {["ongoing", "wait", "finish"].map((statusOption) => (
+                                  <div 
+                                    key={statusOption} 
+                                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => handleSelectStatus(statusOption, reserve.service_id)}
+                                    >
+                                      {statusOption}
+                                  </div>
+                                )
+                                )};
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className={`text-[16px] font-bold px-8 py-1.5 rounded-[15px] ${getStatusClass(reserve.status)}`}>
+                            {reserve.status}
+                          </div>
+                        )}
                     </div>
                 </div>
             ))}

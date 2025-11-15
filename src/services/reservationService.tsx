@@ -69,3 +69,33 @@ export const getAllReservation = async (): Promise<Reservation[]> => {
   console.log("Total reservations fetched:", allReservations.length);
   return allReservations;
 };
+
+export const updateReservationStatus = async (
+  reservationId: string,
+  newStatus: string
+): Promise<boolean> => {
+  const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  try {
+    const updateReservationURL = `${reservationURL}${reservationId}/${newStatus}/`;
+    const response = await fetch(updateReservationURL, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${storedToken}`,
+      },
+    });
+    if (!response.ok) {
+      console.error(
+        "Failed to update reservation status:",
+        response.status,
+        response.statusText
+      );
+      return false;
+    }
+    return true;
+  }
+  catch (err) {
+    console.error("Error updating reservation status:", err);
+    return false;
+  }
+};
