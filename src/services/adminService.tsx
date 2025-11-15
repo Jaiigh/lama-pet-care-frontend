@@ -1,6 +1,6 @@
-const getProfileByAdmin = async (userId: string ,adminToken: string) => {
+const getProfileByAdmin = async (userId: string , adminToken: string) => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/users/${userId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/users/?userId=${userId}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
