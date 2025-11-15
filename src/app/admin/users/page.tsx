@@ -382,7 +382,7 @@ export default function UsersPage() {
                 <div className="ml-auto flex items-center gap-2">
                   <Link
                     aria-label={`แก้ไข ${user.name}`}
-                    href={`/admin/users/${user.userId}/edit`}
+                    href={`/admin/users/edit/?userId=${user.userId}`}
                     className="rounded-full bg-emerald-50 p-2 text-emerald-600 transition hover:bg-emerald-100 hover:text-emerald-700"
                   >
                     <Edit2 className="h-4 w-4" />
