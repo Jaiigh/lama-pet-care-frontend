@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { Profile } from "@/interfaces/profileInterface";
-import { getProfile } from "@/services/profileService";
+import { getProfile, updateProfile } from "@/services/profileService";
 import { s } from "framer-motion/client";
 
 function PersonalInfo() {
@@ -49,7 +49,7 @@ function PersonalInfo() {
       id: 2,
       key: "user_id",
       label: "เลขประจำตัวผู้ใช้",
-      value: profile?.user_id || "loading...",
+      value: 'LAMA-' + profile?.user_id || "loading...",
     },
     {
       id: 3,
@@ -67,13 +67,13 @@ function PersonalInfo() {
       id: 5,
       key: "created_at",
       label: "วันที่สมัครสมาชิก",
-      value: profile?.created_at || "loading...",
+      value: profile?.created_at.split('T')[0] || "loading...",
     },
     {
       id: 6,
       key: "birth_date",
       label: "วันเกิด",
-      value: profile?.birth_date || "loading...",
+      value: profile?.birth_date.split('T')[0] || "loading...",
     },
     {
       id: 7,
@@ -106,46 +106,9 @@ function PersonalInfo() {
     }
 
       // Update profile via backend API
-  //     const updatedData = await apiFetch<{
-  //       name?: string;
-  //       full_name?: string;
-  //       user_id?: string;
-  //       telephone_number?: string;
-  //       phone_number?: string;
-  //       email?: string;
-  //       created_at?: string;
-  //       birth_date?: string;
-  //       address?: string;
-  //     }>("/user/", {
-  //       method: "PATCH",
-  //       body: JSON.stringify({
-  //         name: formData.name,
-  //         telephone_number: formData.telephone_number,
-  //         birth_date: formData.birth_date,
-  //         address: formData.address,
-  //       }),
-  //     });
-
-  //     // Update local state
-  //     const updatedProfile: Profile = {
-  //       name:
-  //         updatedData.name || updatedData.full_name || formData.name || "User",
-  //       user_id: updatedData.user_id || "N/A",
-  //       telephone_number:
-  //         updatedData.telephone_number ||
-  //         updatedData.phone_number ||
-  //         formData.telephone_number ||
-  //         "N/A",
-  //       email: updatedData.email || "N/A",
-  //       created_at: updatedData.created_at || "N/A",
-  //       birth_date: updatedData.birth_date || formData.birth_date || "N/A",
-  //       address: updatedData.address || formData.address || "N/A",
-  //     };
-  //     setProfile(updatedProfile);
-  //   } catch (error) {
-  //     console.error("Error updating profile:", error);
-  //   }
-  // };
+      const updatedProfile = await updateProfile(formData);
+      setProfile(updatedProfile);
+      console.log("Profile updated successfully:", updatedProfile);
   };
 
   return (
@@ -169,7 +132,7 @@ function PersonalInfo() {
                 />
               ) : (
                 <div className="bg-[#EAFFF9] w-full p-[10px] rounded-[10px]">
-                  {profile?.[item.key as keyof Profile] || "loading..."}
+                  {item.value}
                 </div>
               )}
             </div>
