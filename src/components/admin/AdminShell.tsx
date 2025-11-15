@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList, Users, type LucideIcon } from "lucide-react";
 import Logo from "@/images/lamalogo.png";
-import { useAdminSession } from "@/components/admin/AdminSessionProvider";
 
 type AdminShellProps = {
   title: string;
@@ -31,7 +30,6 @@ export default function AdminShell({
   children,
 }: AdminShellProps) {
   const pathname = usePathname();
-  const { profile } = useAdminSession();
 
   return (
     <div className="flex min-h-screen bg-[#E6F5EE]">
@@ -88,7 +86,7 @@ export default function AdminShell({
           <div className="flex items-center gap-3 rounded-full bg-emerald-50 px-4 py-2">
             <div className="text-right">
               <p className="text-sm font-semibold text-slate-900">
-                {profile?.name ?? "Admin"}
+                Admin
               </p>
               <p className="text-xs text-emerald-600">Admin</p>
             </div>

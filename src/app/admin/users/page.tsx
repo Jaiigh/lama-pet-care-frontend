@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Edit2, Trash2 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
-import { useAdminSession } from "@/components/admin/AdminSessionProvider";
 import {
   deleteUserByAdmin as apiDeleteUserByAdmin,
   fetchAdminUsers as apiFetchAdminUsers,
@@ -70,9 +69,8 @@ const fallbackUsers: AdminUser[] = [
   { id: "1113", userId: "fallback-1113", name: "Dr. Chawin Song", role: "Doctor", createdAt: "2024-09-30" },
   { id: "1268", userId: "fallback-1268", name: "Natnicha J.", role: "Owner", createdAt: "2025-04-02" },
 ];
-
+const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 export default function UsersPage() {
-  const { token, profile: adminProfile, loading: sessionLoading } = useAdminSession();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -104,8 +102,8 @@ export default function UsersPage() {
         });
         const normalized = normalizeUserCollection(json);
         const withoutCurrent =
-          adminProfile?.userId != null
-            ? normalized.filter((user) => user.userId !== adminProfile.userId)
+          localStorage.user_id != null
+            ? normalized.filter((user) => user.userId !== localStorage.user_id)
             : normalized;
 
         aggregated.push(...withoutCurrent);
@@ -131,7 +129,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [adminProfile?.userId, token]);
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -256,7 +254,7 @@ export default function UsersPage() {
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">ทั้งหมด</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {loading || sessionLoading
+            {loading 
               ? "—"
               : totalUsers ?? filteredUsers.length}
           </p>
@@ -265,7 +263,7 @@ export default function UsersPage() {
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">เจ้าของสัตว์เลี้ยง</p>
           <p className="mt-2 text-3xl font-semibold text-slate-900">
-            {loading || sessionLoading
+            {loading 
               ? "—"
               : ownerTotal ?? filteredUsers.filter((u) => u.role === "Owner").length}
           </p>

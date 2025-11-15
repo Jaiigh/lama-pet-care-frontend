@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { useSearchParams } from "next/navigation";
 import getProfileByAdmin from "@/services/adminService";
-import { useAdminSession } from "@/components/admin/AdminSessionProvider";
 
 export default function EditUserPage() {
-  const { token, profile: adminProfile, loading: sessionLoading } = useAdminSession();
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
-
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const [formData, setFormData] = useState({
     name: "",
     userId: "",

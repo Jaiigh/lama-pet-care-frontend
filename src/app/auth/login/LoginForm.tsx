@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { checkToken, login } from "@/services/authService";
+import { form } from "framer-motion/client";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
@@ -19,10 +20,6 @@ export default function LoginForm() {
   useEffect(() => {
     setMounted(true);
     // Get role from URL query parameter
-    const roleFromUrl = searchParams.get("role");
-    if (roleFromUrl) {
-      setFormData((prev) => ({ ...prev, role: roleFromUrl }));
-    }
   }, [searchParams]);
 
   const handleInputChange = (
@@ -78,7 +75,11 @@ export default function LoginForm() {
         });
 
         setError(null);
-        window.location.href = "/reservation"; // redirect after login
+        if(formData.role === "admin") {
+          window.location.href = "/admin/users"; // redirect after login
+        } else {
+          window.location.href = "/reservation"; // redirect after login
+        }
       } else {
         setError("Login failed: No token returned.");
       }
@@ -139,7 +140,6 @@ export default function LoginForm() {
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: "right 12px center",
                 }}
-                required
               >
                 <option value="" disabled>
                   Select role
@@ -147,6 +147,7 @@ export default function LoginForm() {
                 <option value="owner">PetOwner</option>
                 <option value="doctor">Doctor</option>
                 <option value="caretaker">Caretaker</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
 
