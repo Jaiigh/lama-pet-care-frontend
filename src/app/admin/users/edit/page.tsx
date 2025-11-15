@@ -1,14 +1,23 @@
 "use client";
 import AdminShell from "@/components/admin/AdminShell";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { useSearchParams } from "next/navigation";
 import getProfileByAdmin from "@/services/adminService";
 
 export default function EditUserPage() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <EditUserContent />
+    </Suspense>
+  );
+}
+
+function EditUserContent() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   const [formData, setFormData] = useState({
     name: "",
     userId: "",
@@ -19,7 +28,7 @@ export default function EditUserPage() {
     address: "",
   });
 
-  const [isEditing, setIsEditing] = useState(false); // State สำหรับควบคุมโหมดการแก้ไข
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
