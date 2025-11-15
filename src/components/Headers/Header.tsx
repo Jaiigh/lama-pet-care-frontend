@@ -36,7 +36,6 @@ export const Header = () => {
     fetchUsername();
   }, [isAuthed, hideHeader]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     if (hideHeader) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,14 +57,12 @@ export const Header = () => {
   }, [showDropdown, hideHeader]);
 
   const handleLogout = () => {
-    // Clear all auth-related data from localStorage
     if (globalThis.window !== undefined) {
       globalThis.window.localStorage.removeItem("token");
       globalThis.window.localStorage.removeItem("accessToken");
       globalThis.window.localStorage.removeItem("user_id");
       globalThis.window.localStorage.removeItem("role");
 
-      // Dispatch auth-changed event to update auth state
       globalThis.window.dispatchEvent(new CustomEvent("auth-changed"));
 
       // Redirect to home page

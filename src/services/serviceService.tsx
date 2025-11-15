@@ -53,7 +53,8 @@ export async function getAvailableStaff(params: GetAvailableStaffParams): Promis
     return data.staff as StaffArrayResponse;
 }
 
-export default { getAvailableStaff };
+const serviceService = { getAvailableStaff };
+export default serviceService;
 
 // Helper function to get just the staff array
 export function getStaffArray(response: StaffArrayResponse): Staff[] {
