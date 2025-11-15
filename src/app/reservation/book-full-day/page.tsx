@@ -8,6 +8,7 @@ import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import { useReservationSelection } from "@/context/ReservationSelectionContext";
 import { getAvailableStaff, type Staff } from "@/services/serviceService";
+import serviceService from "@/services/serviceService";
 import { getPetsByOwner } from "@/services/petservice";
 
 dayjs.extend(buddhistEra);
@@ -27,7 +28,7 @@ const BookFullDayPageInner = () => {
   const [mstaffData, setMStaffData] = useState<Staff[] | null>(null);
   const [petsData, setPetsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [PAYMENT_REDIRECT_URL,setPAYMENT_REDIRECT_URL] = useState("http://localhost:3000/auth/login");
+  const [PAYMENT_REDIRECT_URL,setPAYMENT_REDIRECT_URL] = useState("this/auth/login");
   const [error, setError] = useState<string | null>(null);
 
   const effectiveStart = useMemo(
@@ -94,18 +95,39 @@ const BookFullDayPageInner = () => {
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
+  const [starttimeSlots, setStarttimeSlots] = useState<string[]>([]);
+  const [endtimeSlots, setEndtimeSlots] = useState<string[]>([]);
 
-  // Time slots for dropdown
-  const timeSlots = [
-    "08:00",
-    "09:00",
-    "10:00",
-    "11:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-  ];
+  // Fetch available time slots when staff is selected
+  useEffect(() => {
+    const fetchAvailableTimeSlots = async () => {
+      if (!selectedStaff || !effectiveStart || !effectiveEnd || !selectedServiceType) {
+        setStarttimeSlots([]);
+        setEndtimeSlots([]);
+        return;
+      }
+
+      try {
+        const availableSlots = await serviceService.getAvailableTimeSlots({
+          serviceType: selectedServiceType,
+          staffID: selectedStaff,
+          startDate: effectiveStart,
+          endDate: effectiveEnd,
+        });
+
+        setStarttimeSlots(availableSlots.start);
+        setEndtimeSlots(availableSlots.stop);
+      } catch (err: any) {
+        console.error("Failed to fetch available time slots:", err);
+        setStarttimeSlots([]);
+        setEndtimeSlots([]);
+      }
+    };
+
+    fetchAvailableTimeSlots();
+  }, [selectedStaff, effectiveStart, effectiveEnd, selectedServiceType]);
+
+
 
   // Get staff list from API response
   const staffList = useMemo(() => {
@@ -194,7 +216,6 @@ const BookFullDayPageInner = () => {
 
     const startDayName = thaiDays[start.day()];
     const startDay = start.date();
-    const startMonth = thaiMonths[start.month()];
     const endDay = end.date();
     const endMonth = thaiMonths[end.month()];
     const year = start.year() + 543; // Buddhist era
@@ -224,9 +245,9 @@ const BookFullDayPageInner = () => {
       staffId: selectedStaff,
       startDate: effectiveStart,
       endDate: effectiveEnd,
-      timeSlot: [],
+      timeSlot: [startTime, endTime],
     });
-
+    
     if (typeof window !== "undefined") {
       window.location.href = PAYMENT_REDIRECT_URL;
     }
@@ -360,6 +381,9 @@ const BookFullDayPageInner = () => {
                       const value = e.target.value;
                       setSelectedStaff(value);
                       updateSelection({ staffId: value || null });
+                      // Clear selected times when staff changes
+                      setStartTime("");
+                      setEndTime("");
                     }}
                     className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
                     disabled={loading}
@@ -413,7 +437,7 @@ const BookFullDayPageInner = () => {
                       className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
                     >
                       <option value="">เลือกเวลาเริ่ม</option>
-                      {timeSlots.map((time) => (
+                      {starttimeSlots.map((time) => (
                         <option key={time} value={time}>
                           {time}
                         </option>
@@ -451,7 +475,7 @@ const BookFullDayPageInner = () => {
                       className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
                     >
                       <option value="">เลือกเวลาจบ</option>
-                      {timeSlots.map((time) => (
+                      {endtimeSlots.map((time) => (
                         <option key={time} value={time}>
                           {time}
                         </option>

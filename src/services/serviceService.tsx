@@ -2,7 +2,7 @@ import { environment } from "@/env/environment";
 import { env } from "process";
 
 // src/services/serviceService.tsx
-type ServiceType = "cservice" | "mservice";
+type serviceType = "cservice" | "mservice";
 type ServiceMode = "full-day" | "partial";
 
 export interface Staff {
@@ -16,14 +16,14 @@ export interface Staff {
 }
 
 export interface GetAvailableStaffParams {
-  serviceType: ServiceType;
+  serviceType: serviceType;
   serviceMode: ServiceMode;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   signal?: AbortSignal;
 }
-export interface GetBusytimeSlotsParams {
-  serviceType: ServiceType;
+export interface GetAvailableTimeSlotsParams {
+  serviceType: serviceType;
   staffID: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
@@ -88,19 +88,18 @@ export async function getAvailableStaff(
   return staffArray;
 }
 
-export async function getBusytimeSlots(
-  params: GetBusytimeSlotsParams
+export async function getAvailableTimeSlots(
+  params: GetAvailableTimeSlotsParams
 ): Promise<{start: string[], stop: string[]}> {
   const { serviceType, staffID, startDate, endDate } = params;
 
   const storedToken =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const url = new URL("staff", API_BASE);
+  const url = new URL(`staff/${staffID}/time`, API_BASE);
   url.search = new URLSearchParams({
     serviceType,
     startDate,
     endDate,
-    staffID,
   }).toString();
 
   const res = await fetch(url.toString(), {
@@ -167,4 +166,4 @@ export async function getBusytimeSlots(
   
   return result as {start: string[], stop: string[]};
 }
-export default { getAvailableStaff, getBusytimeSlots };
+export default { getAvailableStaff, getAvailableTimeSlots };
