@@ -9,6 +9,8 @@ import buddhistEra from "dayjs/plugin/buddhistEra";
 import { useReservationSelection } from "@/context/ReservationSelectionContext";
 import { getAvailableStaff, type Staff } from "@/services/serviceService";
 import { getPetsByOwner } from "@/services/petservice";
+import { Pet } from "@/interfaces/profileInterface";
+import { serviceMode, serviceType } from "@/interfaces/serviceInterface";
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
 
@@ -21,7 +23,7 @@ const BookPage = () => {
   const { selection, updateSelection } = useReservationSelection();
   const [cstaffData, setCStaffData] = useState<Staff[] | null>(null);
   const [mstaffData, setMStaffData] = useState<Staff[] | null>(null);
-  const [petsData, setPetsData] = useState<any[]>([]);
+  const [petsData, setPetsData] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,14 +39,14 @@ const BookPage = () => {
       try {
         setLoading(true);
         const Cdata = await getAvailableStaff({
-          serviceType: "cservice" as any,
-          serviceMode: "partial",
+          serviceType: "cservice" as serviceType,
+          serviceMode: "partial" as serviceMode,
           startDate: effectiveDate,
           endDate: effectiveDate,
         });
         const Mdata= await getAvailableStaff({
-          serviceType: "mservice" as any,
-          serviceMode: "partial",
+          serviceType: "mservice" as serviceType,
+          serviceMode: "partial" as serviceMode,
           startDate: effectiveDate,
           endDate: effectiveDate,
         });

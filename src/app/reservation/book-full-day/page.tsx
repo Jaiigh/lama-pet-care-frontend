@@ -10,6 +10,8 @@ import { useReservationSelection } from "@/context/ReservationSelectionContext";
 import { getAvailableStaff, type Staff } from "@/services/serviceService";
 import serviceService from "@/services/serviceService";
 import { getPetsByOwner } from "@/services/petservice";
+import { Pet } from "@/interfaces/profileInterface";
+import { serviceType,serviceMode } from "@/interfaces/serviceInterface"
 
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
@@ -26,7 +28,7 @@ const BookFullDayPageInner = () => {
   // State for API data
   const [cstaffData, setCStaffData] = useState<Staff[] | null>(null);
   const [mstaffData, setMStaffData] = useState<Staff[] | null>(null);
-  const [petsData, setPetsData] = useState<any[]>([]);
+  const [petsData, setPetsData] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [PAYMENT_REDIRECT_URL,setPAYMENT_REDIRECT_URL] = useState("this/auth/login");
   const [error, setError] = useState<string | null>(null);
@@ -48,14 +50,14 @@ const BookFullDayPageInner = () => {
       try {
         setLoading(true);
         const Cdata = await getAvailableStaff({
-          serviceType: "cservice" as any,
-          serviceMode: "full-day",
+          serviceType: "cservice" as serviceType,
+          serviceMode: "full-day" as serviceMode,
           startDate: effectiveStart,
           endDate: effectiveEnd,
         });
         const Mdata = await getAvailableStaff({
-          serviceType: "mservice" as any,
-          serviceMode: "full-day",
+          serviceType: "mservice" as serviceType,
+          serviceMode: "full-day" as serviceMode,
           startDate: effectiveStart,
           endDate: effectiveEnd,
         });
@@ -247,7 +249,7 @@ const BookFullDayPageInner = () => {
       endDate: effectiveEnd,
       timeSlot: [startTime, endTime],
     });
-    
+
     if (typeof window !== "undefined") {
       window.location.href = PAYMENT_REDIRECT_URL;
     }
