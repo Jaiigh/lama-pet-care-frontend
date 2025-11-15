@@ -128,7 +128,7 @@ export const fetchUserDetails = async (
           user_id: user.user_id || user.id || userId,
         };
       }
-    } catch (err) {
+    } catch {
       // Continue to next endpoint
       continue;
     }
@@ -161,7 +161,7 @@ const fetchPetDetails = async (
         name: pet.name || "Pet",
       };
     }
-  } catch (err) {
+  } catch {
     // Silently fail - pet name will default to "Pet"
   }
   return null;

@@ -23,7 +23,7 @@ export interface ReviewSubmission {
 export interface ReviewResponse {
   message: string;
   status: number;
-  data?: any;
+  data?: unknown;
 }
 
 export interface ServiceReviewResponse {
