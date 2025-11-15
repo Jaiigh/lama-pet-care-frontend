@@ -8,14 +8,18 @@ import ArrowRight from "@/assets/arrow-right.svg";
 import Menu from "@/assets/menu.svg";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfile } from "@/services/profileService";
+import { usePathname } from "next/navigation";
 
 export const Header = () => {
+  const pathname = usePathname();
   const { isAuthed } = useAuth();
   const [username, setUsername] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const hideHeader = pathname?.startsWith("/admin");
 
   useEffect(() => {
+    if (hideHeader) return;
     const fetchUsername = async () => {
       if (isAuthed) {
         try {
@@ -30,10 +34,11 @@ export const Header = () => {
     };
 
     fetchUsername();
-  }, [isAuthed]);
+  }, [isAuthed, hideHeader]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (hideHeader) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
@@ -50,7 +55,7 @@ export const Header = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showDropdown]);
+  }, [showDropdown, hideHeader]);
 
   const handleLogout = () => {
     // Clear all auth-related data from localStorage
@@ -67,6 +72,10 @@ export const Header = () => {
       globalThis.window.location.href = "/";
     }
   };
+
+  if (hideHeader) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 backdrop-blur-sm z-20">
