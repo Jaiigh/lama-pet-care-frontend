@@ -65,7 +65,6 @@ const TimeSlotsContent = () => {
   const [staff, setStaff] = useState<Staff | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -127,11 +126,7 @@ const TimeSlotsContent = () => {
           </p>
         )}
 
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#61C5AA]" />
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="text-center py-12 text-red-600">{error}</div>
         ) : (
           <>

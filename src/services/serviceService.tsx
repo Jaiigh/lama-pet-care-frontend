@@ -31,9 +31,9 @@ export interface GetAvailableTimeSlotsParams {
 
 const API_BASE = environment.masterUrl + "/services/";
 
-export async function getAvailableStaff(
+export const getAvailableStaff = async (
   params: GetAvailableStaffParams
-): Promise<Staff[]> {
+): Promise<Staff[]> => {
   const { serviceType, serviceMode, startDate, endDate, signal } = params;
 
   const storedToken =
@@ -87,9 +87,9 @@ export async function getAvailableStaff(
   return staffArray;
 }
 
-export async function getAvailableTimeSlots(
+export const getAvailableTimeSlots = async (
   params: GetAvailableTimeSlotsParams
-): Promise<{start: string[], stop: string[]}> {
+): Promise<{start: string[], stop: string[]}> => {
   const { serviceType, staffID, startDate, endDate } = params;
 
   const storedToken =
@@ -184,9 +184,9 @@ export interface CreateBookingPayload {
   status: "wait";
 }
 
-export async function getStripeLink(
+export const getStripeLink = async (
   payload: CreateBookingPayload
-): Promise<string> {
+): Promise<string> => {
   const storedToken =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -207,6 +207,8 @@ export async function getStripeLink(
   }
   
   const data = await res.json();
-  return data.payment_link;
+  return data.data.stripe_link;
 }
-export default { getAvailableStaff, getAvailableTimeSlots, getStripeLink };
+
+const serviceService = { getAvailableStaff, getAvailableTimeSlots, getStripeLink };
+export default serviceService;
