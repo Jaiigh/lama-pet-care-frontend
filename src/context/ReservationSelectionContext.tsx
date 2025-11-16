@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useCallback,
   ReactNode,
 } from "react";
 import { ReservationMode } from "@/interfaces/reservationFlowInterface";
@@ -92,7 +93,7 @@ export const ReservationSelectionProvider = ({
     }
   };
 
-  const updateSelection = (payload: Partial<ReservationSelection>) => {
+  const updateSelection = useCallback((payload: Partial<ReservationSelection>) => {
     setSelection((prev) => {
       const payloadTimeSlot = payload.timeSlot;
       const normalizedPayloadTimeSlot =
@@ -112,14 +113,14 @@ export const ReservationSelectionProvider = ({
       persist(next);
       return next;
     });
-  };
+  }, []);
 
-  const resetSelection = () => {
+  const resetSelection = useCallback(() => {
     setSelection(DEFAULT_SELECTION);
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(STORAGE_KEY);
     }
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -127,7 +128,7 @@ export const ReservationSelectionProvider = ({
       updateSelection,
       resetSelection,
     }),
-    [selection]
+    [selection, updateSelection, resetSelection]
   );
 
   return (
