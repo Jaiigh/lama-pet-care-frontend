@@ -133,9 +133,15 @@ export async function getAvailableTimeSlots(
   // Extract busy time slots from response and organize by date
   let busySlotsByDate: Record<string, string[]> = {};
   
+  interface BusySlotItem {
+    date?: string;
+    slots?: string[];
+    timeSlots?: string[] | string;
+  }
+  
   if (Array.isArray(data)) {
     // If response is array of objects with date and slots
-    data.forEach((item: any) => {
+    data.forEach((item: BusySlotItem) => {
       if (item.date && Array.isArray(item.slots)) {
         busySlotsByDate[item.date] = item.slots;
       } else if (item.date && item.timeSlots) {
@@ -165,4 +171,42 @@ export async function getAvailableTimeSlots(
   
   return result as {start: string[], stop: string[]};
 }
-export default { getAvailableStaff, getAvailableTimeSlots };
+
+export interface CreateBookingPayload {
+  disease?: string; // Required for mservice
+  owner_id?: string; // For admins creating on behalf of owner
+  payment_id: string;
+  pet_id: string;
+  reserve_date_end: string;
+  reserve_date_start: string;
+  service_type: "mservice" | "cservice";
+  staff_id: string;
+  status: "wait";
+}
+
+export async function getStripeLink(
+  payload: CreateBookingPayload
+): Promise<string> {
+  const storedToken =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  const res = await fetch(API_BASE, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${storedToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => res.statusText);
+    throw new Error(
+      `Failed to create booking: ${res.status} ${errText}`
+    );
+  }
+  
+  const data = await res.json();
+  return data.payment_link;
+}
+export default { getAvailableStaff, getAvailableTimeSlots, getStripeLink };

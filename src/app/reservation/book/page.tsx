@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PetOwnerCardSection from "../section/PetOwnerCardSection";
 import dayjs from "dayjs";
@@ -52,9 +52,10 @@ const BookPage = () => {
         });
         setCStaffData(Cdata);
         setMStaffData(Mdata);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to fetch staff:", err);
-        setError(err.message || "Failed to load staff data");
+        const errorMessage = err instanceof Error ? err.message : "Failed to load staff data";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -68,8 +69,8 @@ const BookPage = () => {
       try {
         const pets = await getPetsByOwner();
         setPetsData(pets);
-      } catch (err: any) {
-        console.error("Failed to fetch pets:", err);
+      } catch {
+        console.error("Failed to fetch pets");
         // Keep empty array for pets if fetch fails
         setPetsData([]);
       }
@@ -129,7 +130,7 @@ const BookPage = () => {
         try {
           const pets = await getPetsByOwner();
           setPetsData(pets);
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Failed to fetch pets:", err);
           // Keep empty array for pets if fetch fails
           setPetsData([]);
