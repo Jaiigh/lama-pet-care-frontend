@@ -4,6 +4,8 @@ import {
   ServiceReview,
   ReviewSubmission,
   ReviewResponse,
+  StaffReviewSummary,
+  StaffReviewItem,
 } from "@/interfaces/reviewInterface";
 
 // Type definitions for API responses
@@ -815,6 +817,92 @@ export const getCaretakersForOwner = async (): Promise<CaretakerInfo[]> => {
     return caretakers;
   } catch (err) {
     console.error("Error fetching caretakers for owner:", err);
+    throw err;
+  }
+};
+
+/**
+ * Fetch staff score and reviews summary
+ * GET /services/staff/{staffID}/score
+ */
+export const getStaffReviewSummary = async (
+  staffID: string
+): Promise<StaffReviewSummary> => {
+  const storedToken =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  if (!storedToken) {
+    console.error("No authentication token found");
+    throw new Error("Authentication required");
+  }
+
+  if (!staffID) {
+    throw new Error("Staff ID is required");
+  }
+
+  try {
+    const response = await fetch(`${serviceURL}staff/${staffID}/score`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${storedToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        "Failed to fetch staff reviews:",
+        response.status,
+        errorText
+      );
+      throw new Error(
+        `Failed to fetch staff reviews: ${response.status} - ${errorText}`
+      );
+    }
+
+    const json = await response.json();
+    const data = json.data || json;
+
+    // Transform API response to our interface
+    // The API might return different field names, so we check multiple possibilities
+    const averageScore =
+      data.average_score || data.avg_score || data.score || data.rating || 0;
+
+    const reviewCount =
+      data.review_count ||
+      data.reviews_count ||
+      data.count ||
+      (data.reviews && data.reviews.length) ||
+      0;
+
+    // Transform reviews array
+    const reviews: StaffReviewItem[] = (data.reviews || []).map(
+      (review: any) => ({
+        date: review.date || review.created_at || review.review_date || "",
+        comment: review.comment || review.review_comment || "",
+        score: review.score || review.rating || 0,
+      })
+    );
+
+    // Calculate years as member if we have created_at
+    let yearsAsMember: number | undefined;
+    if (data.created_at || data.member_since) {
+      const createdDate = new Date(data.created_at || data.member_since);
+      const now = new Date();
+      const years =
+        (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+      yearsAsMember = Math.floor(years);
+    }
+
+    return {
+      average_score: averageScore,
+      review_count: reviewCount,
+      reviews: reviews,
+      years_as_member: yearsAsMember,
+    };
+  } catch (err) {
+    console.error("Error fetching staff review summary:", err);
     throw err;
   }
 };
