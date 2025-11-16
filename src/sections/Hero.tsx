@@ -44,8 +44,8 @@ export const Hero = () => {
             <p className="text-xl text-[#010D3E] tracking-tight mt-6">
               Connect with trusted, professional pet caretakers in just a few
               clicks. Book pet sitting, walks, vet visits, and more. Read
-              reviews, track your pet's care in real-time, and rest easy knowing
-              your furry friends are in expert hands.
+              reviews, track your pet&apos;s care in real-time, and rest easy
+              knowing your furry friends are in expert hands.
             </p>
             <div className="flex gap-2 items-center mt-[30px]">
               <Link href="/auth/login">

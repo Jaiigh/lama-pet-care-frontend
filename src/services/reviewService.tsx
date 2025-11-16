@@ -878,7 +878,15 @@ export const getStaffReviewSummary = async (
 
     // Transform reviews array
     const reviews: StaffReviewItem[] = (data.reviews || []).map(
-      (review: any) => ({
+      (review: {
+        date?: string;
+        created_at?: string;
+        review_date?: string;
+        comment?: string;
+        review_comment?: string;
+        score?: number;
+        rating?: number;
+      }) => ({
         date: review.date || review.created_at || review.review_date || "",
         comment: review.comment || review.review_comment || "",
         score: review.score || review.rating || 0,
