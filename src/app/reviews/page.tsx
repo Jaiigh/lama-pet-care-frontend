@@ -13,7 +13,6 @@ import {
   getCaretakersForOwner,
   CaretakerInfo,
   getStaffReviewSummary,
-  fetchUserDetails,
 } from "@/services/reviewService";
 import { getProfile } from "@/services/profileService";
 import Image from "next/image";
@@ -94,28 +93,6 @@ export default function ReviewsPage() {
             ? localStorage.getItem("name") || "Caretaker"
             : "Caretaker";
         setCaretakerProfile({ name: storedName });
-      }
-
-      // Try to fetch user details for profile image
-      if (userId) {
-        try {
-          const token =
-            typeof window !== "undefined"
-              ? localStorage.getItem("token")
-              : null;
-          if (token) {
-            const userDetails = await fetchUserDetails(userId, token);
-            if (userDetails) {
-              setCaretakerProfile((prev) => ({
-                ...prev,
-                name: userDetails.name || prev?.name || "Caretaker",
-                profile_image: userDetails.profile_image,
-              }));
-            }
-          }
-        } catch (err) {
-          console.error("Error fetching user details:", err);
-        }
       }
     } catch (err) {
       console.error("Error fetching caretaker reviews:", err);

@@ -65,82 +65,6 @@ const serviceURL = baseURL + "/services/";
 const userURL = baseURL + "/user/";
 
 /**
- * Fetch user/caretaker details by user_id
- * Try multiple endpoint patterns since /user/{id} might not exist
- */
-export const fetchUserDetails = async (
-  userId: string,
-  token: string
-): Promise<{
-  name: string;
-  profile_image?: string;
-  user_id?: string;
-} | null> => {
-  if (!userId) {
-    return null;
-  }
-
-  // Try different endpoint patterns
-  const endpoints = [
-    `${userURL}${userId}`, // /api/v1/user/{id}
-    `${baseURL}/users/${userId}`, // /api/v1/users/{id}
-    `${baseURL}/staff/${userId}`, // /api/v1/staff/{id}
-    `${baseURL}/caretaker/${userId}`, // /api/v1/caretaker/{id}
-    `${baseURL}/staffs/${userId}`, // /api/v1/staffs/{id}
-    `${baseURL}/caretakers/${userId}`, // /api/v1/caretakers/{id}
-  ];
-
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        const user = json.data || json;
-
-        // Check multiple possible field names for name
-        const userName =
-          user.name ||
-          user.full_name ||
-          user.username ||
-          user.display_name ||
-          user.first_name ||
-          (user.first_name && user.last_name
-            ? `${user.first_name} ${user.last_name}`
-            : null) ||
-          "Unknown";
-
-        // Check multiple possible field names for profile image
-        const profileImage =
-          user.profile_image ||
-          user.avatar ||
-          user.profile_picture ||
-          user.picture ||
-          user.image;
-
-        return {
-          name: userName,
-          profile_image: profileImage,
-          user_id: user.user_id || user.id || userId,
-        };
-      }
-    } catch {
-      // Continue to next endpoint
-      continue;
-    }
-  }
-
-  // If all endpoints failed, return null
-  return null;
-};
-
-/**
  * Fetch pet details by pet_id
  */
 const fetchPetDetails = async (
@@ -283,19 +207,6 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
             service.caretaker?.profile_image ||
             service.staff_avatar ||
             service.caretaker_avatar;
-
-          // If we don't have the name, try to fetch it
-          if ((!staffName || staffName === "Caretaker") && staffId) {
-            const caretakerInfo = await fetchUserDetails(staffId, storedToken);
-            if (
-              caretakerInfo &&
-              caretakerInfo.name &&
-              caretakerInfo.name !== "Unknown"
-            ) {
-              staffName = caretakerInfo.name;
-              staffAvatar = caretakerInfo.profile_image || staffAvatar;
-            }
-          }
 
           // If still no name, use staff_id instead of "Caretaker"
           if (!staffName || staffName === "Caretaker") {
@@ -517,26 +428,6 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
             serviceDetail.caretaker?.profile_image ||
             serviceDetail.staff_avatar ||
             serviceDetail.caretaker_avatar;
-
-          // If we don't have the name, try to fetch it (but don't fail if it doesn't work)
-          if ((!staffName || staffName === "Caretaker") && caretakerId) {
-            try {
-              const caretakerInfo = await fetchUserDetails(
-                caretakerId,
-                storedToken
-              );
-              if (
-                caretakerInfo &&
-                caretakerInfo.name &&
-                caretakerInfo.name !== "Unknown"
-              ) {
-                staffName = caretakerInfo.name;
-                staffAvatar = caretakerInfo.profile_image || staffAvatar;
-              }
-            } catch {
-              // Silently fail - we'll use staff_id instead
-            }
-          }
 
           // If still no name, use staff_id instead of "Caretaker"
           if (!staffName || staffName === "Caretaker") {
@@ -784,18 +675,10 @@ export const getCaretakersForOwner = async (): Promise<CaretakerInfo[]> => {
     // Fetch details for each caretaker
     const caretakers: CaretakerInfo[] = await Promise.all(
       Array.from(caretakerMap.entries()).map(async ([caretakerId, info]) => {
-        // Use name from service data if available, otherwise try to fetch
-        let caretakerName = caretakerNameMap.get(caretakerId);
+        // Use name from service data if available
+        let caretakerName =
+          caretakerNameMap.get(caretakerId) || "Unknown Caretaker";
         let caretakerAvatar = caretakerAvatarMap.get(caretakerId);
-
-        if (!caretakerName) {
-          const caretakerDetails = await fetchUserDetails(
-            caretakerId,
-            storedToken
-          );
-          caretakerName = caretakerDetails?.name || "Unknown Caretaker";
-          caretakerAvatar = caretakerDetails?.profile_image || caretakerAvatar;
-        }
 
         return {
           user_id: caretakerId,
