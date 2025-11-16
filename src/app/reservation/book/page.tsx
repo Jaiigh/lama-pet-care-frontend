@@ -52,7 +52,6 @@ const BookPage = () => {
         setMStaffData(Mdata);
       } catch (err: unknown) {
         console.error("Failed to fetch staff:", err);
-        const errorMessage = err instanceof Error ? err.message : "Failed to load staff data";
 
       } finally {
         setLoading(false);
