@@ -3,7 +3,7 @@
 import ArrowRight from "@/assets/arrow-right.svg";
 import Image from "next/image";
 import Link from "next/link";
-import dogImage from "@/images/ishow.png";
+import dogImage from "@/images/golden.png";
 import cylinderImage from "@/images/cylinder.png";
 import noodleImage from "@/images/noodle.png";
 import {
@@ -42,12 +42,10 @@ export const Hero = () => {
               Caring for Your Pets Like a Pro
             </h1>
             <p className="text-xl text-[#010D3E] tracking-tight mt-6">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nec
-              elit non nibh aliquam bibendum. Donec ac libero a dolor mollis
-              fringilla vel lacinia magna. Ut scelerisque ornare nisi it amet
-              consequat. Sed condimentum massa in bibendum volutpat. Praesent
-              vitae viverra mi, sed vulputate erat. Duis posuere ligula id nisi
-              dictum accumsan.
+              Connect with trusted, professional pet caretakers in just a few
+              clicks. Book pet sitting, walks, vet visits, and more. Read
+              reviews, track your pet's care in real-time, and rest easy knowing
+              your furry friends are in expert hands.
             </p>
             <div className="flex gap-2 items-center mt-[30px]">
               <Link href="/auth/login">
@@ -69,7 +67,7 @@ export const Hero = () => {
             <motion.img
               src={dogImage.src}
               alt="paw print"
-              className="w-full h-auto md:absolute md:h-full md:w-auto md:max-w-none md:-left-6 lg:left-40"
+              className="w-full h-auto md:absolute md:h-full md:w-auto md:max-w-none md:-left-12 lg:left-20"
               animate={{
                 translateY: [-30, 30],
               }}
