@@ -641,11 +641,7 @@ function EditServiceContent() {
           </div>
         </fieldset>
 
-        {/* Created At */}
-        <div className="text-sm text-gray-600">
-          สร้างเมื่อ: {formData.created_at || "N/A"}
-        </div>
-
+       
         {/* Action Buttons */}
         <div className="flex gap-4">
           {!isEditing ? (
