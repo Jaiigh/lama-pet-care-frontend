@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -30,26 +30,52 @@
   .btn-text {
     @apply text-black bg-transparent border border-black/10;
   }
-  
 }
- .dropdown {
-    position: relative;
-    border: 1px solid black;
-    border-radius: 2px;
-    padding: 14px;
+.dropdown {
+  position: relative;
+  border: 1px solid black;
+  border-radius: 2px;
+  padding: 14px;
 }
-  .dropdown::after {
-    content: "▼";
-    font-size: 1rem;
-    right: 10px;
-    position: absolute;
-    transform: translateY(-50%);
-    top: 50%;
-    pointer-events: none; /* กันไม่ให้คลิกโดน */
+.dropdown::after {
+  content: "▼";
+  font-size: 1rem;
+  right: 10px;
+  position: absolute;
+  transform: translateY(-50%);
+  top: 50%;
+  pointer-events: none; /* กันไม่ให้คลิกโดน */
 }
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-plus-jakarta-sans), sans-serif;
   min-height: 100vh;
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #76d8b1;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #5fc49f;
+}
+
+/* Firefox scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #76d8b1 #f1f1f1;
 }

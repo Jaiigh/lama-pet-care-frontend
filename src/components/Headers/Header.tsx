@@ -116,9 +116,16 @@ export const Header = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="text-black font-medium hover:text-black/80 transition-colors cursor-pointer focus:outline-none"
+                    className="bg-[#76D8B1] text-white font-semibold px-5 py-2.5 rounded-2xl hover:bg-[#5fc49f] transition-all cursor-pointer focus:outline-none shadow-lg border-2 border-[#76D8B1] hover:border-[#5fc49f]"
+                    style={{
+                      backgroundColor: "#76D8B1",
+                      color: "#ffffff",
+                      borderColor: "#76D8B1",
+                      boxShadow:
+                        "0 4px 6px -1px rgba(118, 216, 177, 0.3), 0 2px 4px -1px rgba(118, 216, 177, 0.2)",
+                    }}
                   >
-                    {username}
+                    <span className="text-white font-semibold">{username}</span>
                   </button>
                   {showDropdown && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
