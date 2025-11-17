@@ -1,4 +1,5 @@
 import { Profile } from "@/interfaces/profileInterface";
+import { Pet } from "@/interfaces/petInterface";
 export const getProfileByAdmin = async (userId: string , adminToken: string) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/users/${userId}`, {
@@ -38,7 +39,50 @@ export const updateProfileByAdmin = async (userId: string, profileData: Partial<
         throw err;
     }
 };
+export const getPetByAdminUsingOwnerId = async (ownerId: string, adminToken: string) => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/pets/${ownerId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${adminToken}`,
+            },
+        });
+        if (!response.ok) {
+            throw new Error("Failed to fetch pets by admin using owner ID");
+        }
+        const data = await response.json();
+        return data;
+    }
+    catch (err) {
+        console.error("Error fetching pets by admin using owner ID:", err);
+        throw err;
+    }
+};
+export const addPetByAdmin = async (petData: Partial<Pet>, adminToken: string) => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/pets`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${adminToken}`,
+            },
+            body: JSON.stringify(petData),
+        });
+        if (!response.ok) {
+            throw new Error("Failed to add pet by admin");
+        }
+        const data = await response.json();
+        return data;
+    }
+    catch (err) {
+        console.error("Error adding pet by admin:", err);
+        throw err;
+    }
+};
 export default{
     getProfileByAdmin,
-    updateProfileByAdmin
+    updateProfileByAdmin,
+    getPetByAdminUsingOwnerId,
+    addPetByAdmin
 }

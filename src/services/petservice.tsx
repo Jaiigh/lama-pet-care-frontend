@@ -34,3 +34,30 @@ export async function getPetsByOwner(): Promise<Pet[]> {
     const body = (await res.json()) as PetsResponse;
     return body?.data?.pets ?? [];
 }
+
+interface UpdatePetResponse {
+    message: string;
+    data: { pet: Pet } | null;
+    status: number;
+}
+
+export async function updatePet(petId: string, payload: Partial<Pet>, token?: string): Promise<Pet> {
+    const url = `${petURL}/${petId}`;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(url, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Failed to update pet: ${res.status} ${text}`);
+    }
+
+    const body = (await res.json()) as UpdatePetResponse;
+    return body?.data?.pet as Pet;
+}
+

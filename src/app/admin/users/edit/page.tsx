@@ -2,8 +2,9 @@
 import AdminShell from "@/components/admin/AdminShell";
 import { useState, useEffect, Suspense } from "react";
 import { Profile } from "@/interfaces/profileInterface";
+import { Pet } from "@/interfaces/petInterface";
 import { useSearchParams } from "next/navigation";
-import { getProfileByAdmin, updateProfileByAdmin } from "@/services/adminService";
+import { getProfileByAdmin, updateProfileByAdmin ,getPetByAdminUsingOwnerId,addPetByAdmin} from "@/services/adminService";
 
 export default function EditUserPage() {
   return (
@@ -30,10 +31,22 @@ function EditUserContent() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [petsLoading, setPetsLoading] = useState(false);
+  const [petsError, setPetsError] = useState<string | null>(null);
+
+  // Add state for new pet form
+  const [newPet, setNewPet] = useState<Partial<Pet>>({});
+  const [isAddingPet, setIsAddingPet] = useState(false);
+
+  // Add state for modal visibility
+  const [isAddPetModalOpen, setIsAddPetModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (userId && token) {
+        setPetsLoading(true);
+        setPetsError(null);
         try {
           const data = await getProfileByAdmin(userId, token);
           console.log(data);
@@ -46,8 +59,16 @@ function EditUserContent() {
             birthDate: data?.data?.birth_date || "N/A",
             address: data?.data?.address || "N/A",
           });
+
+          // try to read pets from admin profile response if available
+          const fetchedPets = await getPetByAdminUsingOwnerId(userId, token);
+          setPets(Array.isArray(fetchedPets?.data.pets) ? fetchedPets.data.pets : []);
+          console.log("Fetched pets:", fetchedPets.data.pets);
         } catch (err) {
           console.error("fetchProfile error:", err);
+          setPetsError("ไม่สามารถดึงข้อมูลสัตว์เลี้ยงได้");
+        } finally {
+          setPetsLoading(false);
         }
       }
     };
@@ -75,6 +96,124 @@ function EditUserContent() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+
+  // Modal component
+  const AddPetModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    const [newPet, setNewPet] = useState<Partial<Pet>>({});
+
+    const handleNewPetChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setNewPet((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddPet = async () => {
+      if (!userId || !token) return;
+      try {
+        const addedPet = await addPetByAdmin(newPet, token);
+        setPets((prev) => [...prev, addedPet]);
+        onClose();
+      } catch (err) {
+        console.error("Error adding pet:", err);
+      }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 backdrop-blur-sm bg-opacity-25 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+          <h2 className="text-lg font-semibold mb-4">เพิ่มสัตว์เลี้ยง</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">ชื่อสัตว์เลี้ยง</label>
+              <input
+                type="text"
+                name="name"
+                value={newPet.name || ""}
+                onChange={handleNewPetChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">รหัสเจ้าของ</label>
+              <input
+                type="text"
+                name="owner_id"
+                value={userId || ""}
+                disabled={true}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">สายพันธุ์</label>
+              <input
+                type="text"
+                name="breed"
+                value={newPet.breed || ""}
+                onChange={handleNewPetChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">วันเกิด</label>
+              <input
+                type="date"
+                name="birth_date"
+                value={newPet.birth_date || ""}
+                onChange={handleNewPetChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">น้ำหนัก</label>
+              <input
+                type="text"
+                name="weight"
+                value={newPet.weight || ""}
+                onChange={handleNewPetChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">ชนิด</label>
+              <input
+                type="text"
+                name="kind"
+                value={newPet.kind || ""}
+                onChange={handleNewPetChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">เพศ</label>
+              <input
+                type="text"
+                name="sex"
+                value={newPet.sex || ""}
+                onChange={handleNewPetChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+              />
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end space-x-2">
+            <button
+              onClick={handleAddPet}
+              className="bg-teal-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-teal-600"
+            >
+              บันทึก
+            </button>
+            <button
+              onClick={onClose}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md shadow-sm hover:bg-gray-400"
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -182,6 +321,77 @@ function EditUserContent() {
             </button>
           </div>
         </form>
+        {/* Pets section */}
+        <div className="mt-6">
+          <fieldset className="border border-gray-300 rounded-md p-4">
+            <legend className="text-sm font-semibold text-gray-700 mb-4">สัตว์เลี้ยง</legend>
+            {petsLoading ? (
+              <p>กำลังโหลดข้อมูลสัตว์เลี้ยง...</p>
+            ) : petsError ? (
+              <p className="text-red-500">{petsError}</p>
+            ) : pets && pets.length > 0 ? (
+              <div className="space-y-4">
+                {pets.map((p) => (
+                  <fieldset key={p.pet_id} className="border border-gray-200 rounded-md p-4 bg-gray-50">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700">ชื่อสัตว์เลี้ยง</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.name || "-"}</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">รหัสสัตว์เลี้ยง</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.pet_id}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">เจ้าของ (ID)</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.owner_id || "-"}</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">สายพันธุ์</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.breed || "-"}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">ชนิด</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.kind || "-"}</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">เพศ</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.sex || "-"}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">น้ำหนัก</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.weight || "-"}</p>
+                      </div>
+
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700">วันเกิด</label>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.birth_date || "-"}</p>
+                      </div>
+                    </div>
+                  </fieldset>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600">ไม่มีข้อมูลสัตว์เลี้ยง</p>
+            )}
+          </fieldset>
+
+          {/* Add Pet section */}
+          <div className="mt-4">
+            <button
+              onClick={() => setIsAddPetModalOpen(true)}
+              className="bg-teal-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-teal-600"
+            >
+              เพิ่มสัตว์เลี้ยง
+            </button>
+          </div>
+        </div>
+
+        {/* Render AddPetModal */}
+        <AddPetModal isOpen={isAddPetModalOpen} onClose={() => setIsAddPetModalOpen(false)} />
       </AdminShell>
     </div>
   );
