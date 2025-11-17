@@ -26,6 +26,69 @@ pnpm run dev
 
 ---
 
+## 🧪 Testing
+
+This project uses [Playwright](https://playwright.dev/) for end-to-end testing.
+
+### Setup for Testing
+
+1. Install dependencies (if not already done):
+
+```bash
+pnpm install
+```
+
+2. Install Playwright browsers:
+
+```bash
+npx playwright install
+```
+
+### Running Tests
+
+**Run all E2E tests:**
+
+```bash
+npm run test:e2e
+```
+
+**Run tests with UI mode (interactive):**
+
+```bash
+npm run test:e2e:ui
+```
+
+**Run tests in headed mode (see the browser):**
+
+```bash
+npm run test:e2e:headed
+```
+
+**Run tests in debug mode:**
+
+```bash
+npm run test:e2e:debug
+```
+
+**View test report:**
+
+```bash
+npx playwright show-report
+```
+
+### Test Coverage
+
+Currently, the test suite covers:
+
+- **Reserve History Page**: Role-based access control and status management
+  - Petowner, Caretaker, and Doctor can see their services
+  - Petowner cannot change service status
+  - Doctor and Caretaker can change service status
+
+For more details, see [`tests/README.md`](./tests/README.md).
+
+---
+
 ## 🔒 Branch Rules for Main
 
 The `main` branch is protected with the following rules:
