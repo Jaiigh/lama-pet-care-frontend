@@ -2,15 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { Reservation } from "@/interfaces/reservationInterface";
+import { Payment } from "@/interfaces/paymentInterface";
 import {
   getAllReservation,
   updateReservationStatus,
 } from "@/services/reservationService";
+import { getAllPayment } from "@/services/paymentService";
 
 export default function Home() {
   //------------ fetch reservations --------------
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [fetchTrigger, setFetchTrigger] = useState<number>(0);
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -22,7 +26,22 @@ export default function Home() {
       }
     };
     fetchReservations();
+
+    const fetchPayments = async () => {
+      try {
+        const response: Payment[] = await getAllPayment();
+        setPayments(response);
+      } catch (error) {
+        console.error("Error fetching payments:", error);
+      }
+    };
+    fetchPayments();
   }, [fetchTrigger]);
+
+  const paymentMap = payments.reduce((map, payment) => {
+    map[payment.payment_id] = payment;
+    return map;
+  }, {} as Record<string, Payment>);
 
   const shortenID = (id: string) => {
     if (id.length <= 12) return id;
@@ -31,12 +50,10 @@ export default function Home() {
 
   const getStatusClass = (status: string) => {
     switch (status.toLowerCase()) {
-      case "on_going":
       case "ongoing":
         return "bg-[#FFD978] text-black";
       case "wait":
         return "bg-[#F1EED9] text-black";
-      case "finish":
       case "finished":
         return "bg-[#61C5AA] text-black";
       default:
@@ -62,15 +79,9 @@ export default function Home() {
       if (response) {
         console.log("Reservation status updated successfully");
         setFetchTrigger((prev) => prev + 1);
-      } else {
-        console.error(
-          "Failed to update reservation status: API returned false"
-        );
-        alert("ไม่สามารถอัพเดทสถานะได้ กรุณาลองอีกครั้ง");
       }
     } catch (error) {
       console.error("Error updating reservation status:", error);
-      alert("เกิดข้อผิดพลาดในการอัพเดทสถานะ กรุณาลองอีกครั้ง");
     }
   };
 
@@ -79,19 +90,74 @@ export default function Home() {
     handleUpdateStatus(newStatus, reservationId);
   };
 
+  // Filter reservations based on selected tab
+  const filteredReservations = reservations.filter((reserve) => {
+    if (selectedFilter === "all") {
+      return true;
+    }
+    const status = reserve.status.toLowerCase();
+    if (selectedFilter === "ongoing") {
+      return status === "ongoing";
+    }
+    if (selectedFilter === "wait") {
+      return status === "wait";
+    }
+    if (selectedFilter === "finished") {
+      return status === "finished" || status === "finish";
+    }
+    return true;
+  });
+
   return (
     <div className="reserve-management p-5">
       <div className="header-container w-[1250px] h-[78px] mx-auto bg-[#F7F5E9] flex items-center">
         <h1 className="text-[20px] font-bold text-black pl-7">การจอง</h1>
       </div>
-      <div className="type-container w-[1250px] h-[40px] mx-auto bg-[#F3F1E0] border border-[#D8D5BD] flex items-center gap-10 pl-5">
-        <div>กำลังดำเนินการ</div>
-        <div>ทั้งหมด</div>
-        <div>เสร็จสิ้น</div>
+      <div className="type-container w-[1250px] h-[50px] mx-auto bg-[#F3F1E0] border border-[#D8D5BD] flex items-center gap-0 pl-0">
+        <button
+          onClick={() => setSelectedFilter("wait")}
+          className={`flex-1 h-full px-4 text-sm font-medium transition-all duration-200 ${
+            selectedFilter === "wait"
+              ? "bg-[#F1EED9] text-[#8B7355] border-b-2 border-[#8B7355] font-semibold"
+              : "text-gray-600 hover:bg-[#E8E5D3] hover:text-gray-800"
+          }`}
+        >
+          Wait
+        </button>
+        <button
+          onClick={() => setSelectedFilter("ongoing")}
+          className={`flex-1 h-full px-4 text-sm font-medium transition-all duration-200 ${
+            selectedFilter === "ongoing"
+              ? "bg-[#FFD978] text-[#8B6F00] border-b-2 border-[#8B6F00] font-semibold"
+              : "text-gray-600 hover:bg-[#E8E5D3] hover:text-gray-800"
+          }`}
+        >
+          Ongoing
+        </button>
+        <button
+          onClick={() => setSelectedFilter("finished")}
+          className={`flex-1 h-full px-4 text-sm font-medium transition-all duration-200 ${
+            selectedFilter === "finished"
+              ? "bg-[#61C5AA] text-[#1A5D47] border-b-2 border-[#1A5D47] font-semibold"
+              : "text-gray-600 hover:bg-[#E8E5D3] hover:text-gray-800"
+          }`}
+        >
+          Finished
+        </button>
+        <button
+          onClick={() => setSelectedFilter("all")}
+          className={`flex-1 h-full px-4 text-sm font-medium transition-all duration-200 ${
+            selectedFilter === "all"
+              ? "bg-[#3AB795] text-[#5A5749] border-b-2 border-[#5A5749] font-semibold"
+              : "text-gray-600 hover:bg-[#E8E5D3] hover:text-gray-800"
+          }`}
+        >
+          All
+        </button>
       </div>
-      <div className="reserve-container w-[1250px] h-[492px] mx-auto pt-7 bg-[#FDFDFA] flex flex-col gap-4 max-h-[500px] overflow-y-auto overflow-x-hidden">
-        {reservations &&
-          reservations.map((reserve) => (
+      <div className="reserve-container w-[1250px] min-h-[492px] mx-auto pt-7 bg-[#FDFDFA] flex flex-col gap-4 max-h-[600px] overflow-y-auto overflow-x-hidden">
+        {filteredReservations && filteredReservations.length > 0 ? (
+          filteredReservations.map((reserve) => (
             <div
               key={reserve.service_id}
               className="reserve-item p-5 px-[70px] mx-auto w-[1200px] h-[98px] border border-gray-400 rounded-lg grid grid-cols-[150px_150px_150px_150px_150px] gap-x-20"
@@ -117,7 +183,7 @@ export default function Home() {
               <div className="detail-group flex flex-col items-start gap-1">
                 <div className="label text-[13px]">ราคาค่าบริการ</div>
                 <div className="value text-[22px] font-bold text-[#3AB795]">
-                  {reserve.price ?? "N/A"}
+                  {paymentMap[reserve.payment_id]?.price ?? "N/A"}
                 </div>
               </div>
               <div className="detail-group flex flex-col items-start gap-1">
@@ -140,7 +206,7 @@ export default function Home() {
                     </button>
                     {openReservationId === reserve.service_id && (
                       <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                        {["on_going", "wait", "finish"].map((statusOption) => (
+                        {["ongoing", "wait", "finish"].map((statusOption) => (
                           <div
                             key={statusOption}
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
@@ -168,7 +234,12 @@ export default function Home() {
                 )}
               </div>
             </div>
-          ))}
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-500 text-lg">ไม่พบข้อมูลการจอง</p>
+          </div>
+        )}
       </div>
     </div>
   );

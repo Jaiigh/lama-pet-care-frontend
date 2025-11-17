@@ -23,8 +23,15 @@ export const getSinglePagePayment = async (
     });
 
     if (!response.ok) {
-      console.error(`Failed to fetch page ${page}:`, response.statusText);
-            throw new Error(`Failed to fetch payment page ${page}`);
+      // Return empty data instead of throwing to prevent breaking the page
+      console.warn(`Failed to fetch payment page ${page}:`, response.statusText);
+      return {
+        data: {
+          payments: [],
+          amount: 0,
+        },
+        status: response.status,
+      } as PaymentApiResponse;
     }
 
     const json = await response.json();
@@ -32,8 +39,15 @@ export const getSinglePagePayment = async (
     return json;
   }
   catch (err) {
-    console.error("Error fetching payment:", err);
-    throw err;
+    // Return empty data instead of throwing to prevent breaking the page
+    console.warn("Error fetching payment:", err);
+    return {
+      data: {
+        payments: [],
+        amount: 0,
+      },
+      status: 500,
+    } as PaymentApiResponse;
   }
 };
 
@@ -45,11 +59,13 @@ export const getAllPayment = async (): Promise<Payment[]> => {
 
   console.log("Fetching all payments...");
 
-  while (hasMorePages) {
+  try {
+    while (hasMorePages) {
       const response = await getSinglePagePayment(currentPage, 5);
-      const payments = response.data.payments;
+      const payments = response.data?.payments || [];
+      
       if(currentPage === 1) {
-        amountOfItems = response.data.amount;
+        amountOfItems = response.data?.amount || 0;
       }
 
       allPayments = [...allPayments, ...payments];
@@ -63,9 +79,14 @@ export const getAllPayment = async (): Promise<Payment[]> => {
       if(amountOfItems === 0) {
         hasMorePages = false;
       }
-  }
+    }
 
-  console.log("Total reservations fetched:", allPayments.length);
-  return allPayments;
+    console.log("Total payments fetched:", allPayments.length);
+    return allPayments;
+  } catch (err) {
+    // Return empty array instead of throwing to prevent breaking the page
+    console.warn("Error fetching all payments:", err);
+    return [];
+  }
 };
 
