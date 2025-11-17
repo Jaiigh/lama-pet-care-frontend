@@ -2,44 +2,107 @@
 
 import { useEffect, useState } from "react";
 import { StarRating } from "@/components/StarRating";
-import { ServiceReview, ReviewSubmission } from "@/interfaces/reviewInterface";
+import {
+  ServiceReview,
+  ReviewSubmission,
+  StaffReviewSummary,
+} from "@/interfaces/reviewInterface";
 import {
   getUnreviewedServices,
   submitRating,
   getCaretakersForOwner,
   CaretakerInfo,
+  getStaffReviewSummary,
 } from "@/services/reviewService";
+import { getProfile } from "@/services/profileService";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ReviewsPage() {
   const { isAuthed } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Check user role on mount
+  // Check user role and ID on mount
   useEffect(() => {
     if (globalThis.window !== undefined) {
       const role = globalThis.window.localStorage.getItem("role");
+      const id = globalThis.window.localStorage.getItem("user_id");
       setUserRole(role);
+      setUserId(id);
     }
   }, [isAuthed]);
+
+  // Owner view state
   const [unreviewedServices, setUnreviewedServices] = useState<ServiceReview[]>(
     []
   );
-  const [loading, setLoading] = useState(true);
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [comments, setComments] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
-  const [error, setError] = useState<string | null>(null);
   const [caretakers, setCaretakers] = useState<CaretakerInfo[]>([]);
   const [showCaretakers, setShowCaretakers] = useState(false);
 
+  // Caretaker view state
+  const [staffReviewSummary, setStaffReviewSummary] =
+    useState<StaffReviewSummary | null>(null);
+  const [caretakerProfile, setCaretakerProfile] = useState<{
+    name: string;
+    profile_image?: string;
+  } | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (isAuthed) {
-      fetchServices();
-      fetchCaretakers();
+    if (isAuthed && userRole) {
+      if (userRole.toLowerCase() === "caretaker") {
+        fetchCaretakerReviews();
+      } else if (
+        userRole.toLowerCase() === "owner" ||
+        userRole.toLowerCase() === "pet owner"
+      ) {
+        fetchServices();
+        fetchCaretakers();
+      }
     }
-  }, [isAuthed]);
+  }, [isAuthed, userRole, userId]);
+
+  const fetchCaretakerReviews = async () => {
+    if (!userId) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch staff review summary
+      const summary = await getStaffReviewSummary(userId);
+      setStaffReviewSummary(summary);
+
+      // Fetch caretaker profile for name and image
+      try {
+        const profile = await getProfile();
+        setCaretakerProfile({
+          name: profile.name,
+          profile_image: undefined, // Profile interface doesn't have profile_image, will need to fetch separately
+        });
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        // Try to get name from localStorage or use a fallback
+        const storedName =
+          typeof window !== "undefined"
+            ? localStorage.getItem("name") || "Caretaker"
+            : "Caretaker";
+        setCaretakerProfile({ name: storedName });
+      }
+    } catch (err) {
+      console.error("Error fetching caretaker reviews:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch review summary"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchCaretakers = async () => {
     try {
@@ -65,9 +128,16 @@ export default function ReviewsPage() {
       }
       setRatings(initialRatings);
       setComments(initialComments);
+      // No error if services array is empty - that just means no unreviewed services
     } catch (err) {
-      console.error("Error fetching services:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch services");
+      // Only show error for actual errors, not empty results
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch services";
+      // Don't show error if it's just an empty result
+      if (!errorMessage.includes("404") && !errorMessage.includes("empty")) {
+        console.error("Error fetching services:", err);
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -135,8 +205,21 @@ export default function ReviewsPage() {
       const date = new Date(dateString);
       const day = date.getDate().toString().padStart(2, "0");
       const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
+      const year = date.getFullYear() + 543; // Convert to Buddhist era (BE)
       return `${day}/${month}/${year}`;
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatThaiDate = (dateString: string) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear() + 543; // Convert to Buddhist era (BE)
+      return `วันที่ ${day}/${month}/${year}`;
     } catch {
       return dateString;
     }
@@ -154,12 +237,15 @@ export default function ReviewsPage() {
     );
   }
 
-  // Check if user is an owner (required for reviews)
-  if (
+  // Show caretaker view if role is caretaker
+  const isCaretaker = userRole && userRole.toLowerCase() === "caretaker";
+  const isOwner =
     userRole &&
-    userRole.toLowerCase() !== "owner" &&
-    userRole.toLowerCase() !== "pet owner"
-  ) {
+    (userRole.toLowerCase() === "owner" ||
+      userRole.toLowerCase() === "pet owner");
+
+  // If not caretaker or owner, show error
+  if (userRole && !isCaretaker && !isOwner) {
     return (
       <div className="min-h-screen bg-[#EBF8F4]">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -168,13 +254,9 @@ export default function ReviewsPage() {
               Role Required
             </h2>
             <p className="text-yellow-700">
-              You need to be logged in as an <strong>owner</strong> to submit
-              reviews. You are currently logged in as:{" "}
-              <strong>{userRole}</strong>
-            </p>
-            <p className="text-yellow-600 text-sm mt-2">
-              Please log out and log in with an owner account to access the
-              review page.
+              You need to be logged in as an <strong>owner</strong> or{" "}
+              <strong>caretaker</strong> to access reviews. You are currently
+              logged in as: <strong>{userRole}</strong>
             </p>
           </div>
         </div>
@@ -182,6 +264,143 @@ export default function ReviewsPage() {
     );
   }
 
+  // Caretaker View
+  if (isCaretaker) {
+    return (
+      <div className="min-h-screen bg-[#EBF8F4]">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#76D8B1]"></div>
+              <p className="mt-4 text-gray-600">กำลังโหลด...</p>
+            </div>
+          ) : staffReviewSummary && caretakerProfile ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column: Profile Card */}
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-lg border-2 border-[#76D8B1] p-6 sticky top-4">
+                  {/* Profile Picture */}
+                  <div className="relative flex justify-center mb-4">
+                    <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
+                      {caretakerProfile.profile_image ? (
+                        <Image
+                          src={caretakerProfile.profile_image}
+                          alt={caretakerProfile.name}
+                          width={128}
+                          height={128}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-[#76D8B1] flex items-center justify-center text-white font-semibold text-4xl">
+                          {caretakerProfile.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Name */}
+                  <h2 className="text-2xl font-bold text-gray-800 text-center mb-3">
+                    {caretakerProfile.name}
+                  </h2>
+
+                  {/* Role Tag */}
+                  <div className="flex justify-center mb-6">
+                    <div className="flex items-center gap-2 bg-[#EBF8F4] px-4 py-1.5 rounded-full">
+                      <div className="w-2 h-2 bg-[#76D8B1] rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-700">
+                        Caretaker
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Statistics */}
+                  <div className="space-y-3">
+                    {/* Average Score */}
+                    <div className="bg-[#EBF8F4] rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-gray-800 mb-1">
+                        {staffReviewSummary.average_score.toFixed(1)}/5
+                      </div>
+                      <div className="text-sm text-gray-600">คะแนนเฉลี่ย</div>
+                    </div>
+
+                    {/* Review Count */}
+                    <div className="bg-[#EBF8F4] rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-gray-800 mb-1">
+                        {staffReviewSummary.review_count}
+                      </div>
+                      <div className="text-sm text-gray-600">รีวิว</div>
+                    </div>
+
+                    {/* Years as Member */}
+                    {staffReviewSummary.years_as_member !== undefined && (
+                      <div className="bg-[#EBF8F4] rounded-lg p-4 text-center">
+                        <div className="text-3xl font-bold text-gray-800 mb-1">
+                          {staffReviewSummary.years_as_member}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          ปีที่เป็นสมาชิก
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Reviews List */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                    รีวิว
+                  </h2>
+
+                  {staffReviewSummary.reviews.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-600">ยังไม่มีรีวิว</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-6 custom-scrollbar">
+                      {staffReviewSummary.reviews.map((review, index) => (
+                        <div
+                          key={`${review.date}-${index}`}
+                          className="border border-gray-200 rounded-lg p-4"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <p className="font-bold text-gray-800">
+                              {formatThaiDate(review.date)}
+                            </p>
+                            <StarRating
+                              rating={review.score}
+                              onRatingChange={() => {}}
+                              readonly={true}
+                              size="sm"
+                            />
+                          </div>
+                          <p className="text-gray-700">{review.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+              <p className="text-gray-600">ไม่พบข้อมูลรีวิว</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Owner View (existing code)
   return (
     <div className="min-h-screen bg-[#EBF8F4]">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
