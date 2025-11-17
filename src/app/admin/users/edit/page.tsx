@@ -1,10 +1,11 @@
 "use client";
 import AdminShell from "@/components/admin/AdminShell";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { Pet } from "@/interfaces/petInterface";
 import { useSearchParams } from "next/navigation";
 import { getProfileByAdmin, updateProfileByAdmin ,getPetByAdminUsingOwnerId,addPetByAdmin} from "@/services/adminService";
+import { delay } from "framer-motion";
 
 export default function EditUserPage() {
   return (
@@ -102,17 +103,57 @@ function EditUserContent() {
   // Modal component
   const AddPetModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
     const [newPet, setNewPet] = useState<Partial<Pet>>({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const handleNewPetChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleNewPetChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
       setNewPet((prev) => ({ ...prev, [name]: value }));
+      setErrors((prev) => ({ ...prev, [name]: value ? "" : "This field is required" }));
     };
 
+    // Debug and fix validation logic and button state
+    const isFormValid = useMemo(() => {
+      const requiredFields: (keyof Pet)[] = [
+        "breed",
+        "name",
+        "birth_date",
+        "weight",
+        "kind",
+        "sex",
+      ];
+      const newErrors: Record<string, string> = {};
+
+      requiredFields.forEach((field) => {
+        if (!newPet[field] || newPet[field]?.toString().trim() === "") {
+          newErrors[field] = "This field is required";
+        }
+      });
+
+      setErrors(newErrors);
+      console.log("Validation errors:", newErrors); // Debug log
+      return Object.keys(newErrors).length === 0;
+    }, [newPet]);
+
+    // Ensure pets state is updated correctly after adding a pet
     const handleAddPet = async () => {
-      if (!userId || !token) return;
+      console.log("Attempting to add pet", newPet); // Debug log
+      if (!isFormValid) {
+        console.error("Form is invalid", errors); // Debug log
+        return;
+      }
+      if (!userId || !token) {
+        console.error("Missing userId or token"); // Debug log
+        return;
+      }
       try {
-        const addedPet = await addPetByAdmin(newPet, token);
-        setPets((prev) => [...prev, addedPet]);
+        const addedPet = await addPetByAdmin(newPet, token, userId);
+        if (addedPet) {
+          setPets((prev) => [...prev, addedPet]); // Update pets state with the new pet
+        } else {
+          console.warn("No pet returned from addPetByAdmin. Refetching pets.");
+          const fetchedPets = await getPetByAdminUsingOwnerId(userId, token);
+          setPets(Array.isArray(fetchedPets?.data.pets) ? fetchedPets.data.pets : []);
+        }
         onClose();
       } catch (err) {
         console.error("Error adding pet:", err);
@@ -126,15 +167,26 @@ function EditUserContent() {
         <div className="bg-white rounded-lg shadow-lg p-6 w-96">
           <h2 className="text-lg font-semibold mb-4">เพิ่มสัตว์เลี้ยง</h2>
           <div className="space-y-4">
+            {/*
+              { label: "ชื่อสัตว์เลี้ยง", name: "name" },
+              { label: "รหัสสัตว์เลี้ยง", name: "pet_id" },
+              { label: "รหัสเจ้าของ", name: "owner_id" },
+              { label: "สายพันธุ์", name: "breed" },
+              { label: "วันเกิด", name: "birth_date", type: "date" },
+              { label: "น้ำหนัก", name: "weight", type: "number" },
+              { label: "ชนิด", name: "kind" },
+              { label: "เพศ", name: "sex", type: "select" },
+            */}
             <div>
               <label className="block text-sm font-medium text-gray-700">ชื่อสัตว์เลี้ยง</label>
               <input
                 type="text"
                 name="name"
-                value={newPet.name || ""}
+                value={newPet.name ?? ""}
                 onChange={handleNewPetChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
               />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">รหัสเจ้าของ</label>
@@ -151,56 +203,68 @@ function EditUserContent() {
               <input
                 type="text"
                 name="breed"
-                value={newPet.breed || ""}
+                value={newPet.breed ?? ""}
                 onChange={handleNewPetChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
               />
+              {errors.breed && <p className="text-red-500 text-sm mt-1">{errors.breed}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">วันเกิด</label>
               <input
                 type="date"
                 name="birth_date"
-                value={newPet.birth_date || ""}
+                value={newPet.birth_date ?? ""}
                 onChange={handleNewPetChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
               />
+              {errors.birth_date && <p className="text-red-500 text-sm mt-1">{errors.birth_date}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">น้ำหนัก</label>
               <input
                 type="text"
                 name="weight"
-                value={newPet.weight || ""}
+                value={newPet.weight ?? ""}
                 onChange={handleNewPetChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
               />
+              {errors.weight && <p className="text-red-500 text-sm mt-1">{errors.weight}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">ชนิด</label>
               <input
                 type="text"
                 name="kind"
-                value={newPet.kind || ""}
+                value={newPet.kind ?? ""}
                 onChange={handleNewPetChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
               />
+              {errors.kind && <p className="text-red-500 text-sm mt-1">{errors.kind}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">เพศ</label>
-              <input
-                type="text"
+              <select
                 name="sex"
-                value={newPet.sex || ""}
+                value={newPet.sex ?? ""}
                 onChange={handleNewPetChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
-              />
+              >
+                <option value="">เลือกเพศ</option>
+                <option value="male">ชาย</option>
+                <option value="female">หญิง</option>
+                <option value="unknown">ไม่ทราบ</option>
+              </select>
+              {errors.sex && <p className="text-red-500 text-sm mt-1">{errors.sex}</p>}
             </div>
           </div>
           <div className="mt-6 flex justify-end space-x-2">
             <button
               onClick={handleAddPet}
-              className="bg-teal-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-teal-600"
+              disabled={!isFormValid}
+              className={`bg-teal-500 text-white px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
+                !isFormValid ? "opacity-50 cursor-not-allowed" : "hover:bg-teal-600"
+              }`}
             >
               บันทึก
             </button>
@@ -363,7 +427,7 @@ function EditUserContent() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">น้ำหนัก</label>
-                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.weight || "-"}</p>
+                        <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{String(p.weight) || "-"}</p>
                       </div>
 
                       <div className="col-span-2">

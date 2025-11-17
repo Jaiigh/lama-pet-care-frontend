@@ -59,9 +59,11 @@ export const getPetByAdminUsingOwnerId = async (ownerId: string, adminToken: str
         throw err;
     }
 };
-export const addPetByAdmin = async (petData: Partial<Pet>, adminToken: string) => {
+export const addPetByAdmin = async (petData: Partial<Pet>, adminToken: string ,userId: string) => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/pets`, {
+        petData.birth_date = petData.birth_date + "T00:00:00Z";
+        console.log(`${process.env.NEXT_PUBLIC_API_BASE}/pets/${userId}`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/pets/${userId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
