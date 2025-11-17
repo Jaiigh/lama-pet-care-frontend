@@ -108,7 +108,7 @@ export const Header = () => {
             </div>
             <nav className="hidden md:flex gap-6 text-black/60 items-center">
               <Link href="/">Home</Link>
-              <Link href="/pet-sitting">Pet Sitting</Link>
+              <Link href="/reserve-history">My Reservations</Link>
               <Link href="/reservation">Reservation</Link>
               <Link href="/reviews">Reviews</Link>
               <Link href="/profile">Profile</Link>

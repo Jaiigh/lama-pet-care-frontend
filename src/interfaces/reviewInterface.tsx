@@ -47,4 +47,3 @@ export interface StaffReviewSummary {
   reviews: StaffReviewItem[];
   years_as_member?: number;
 }
-
