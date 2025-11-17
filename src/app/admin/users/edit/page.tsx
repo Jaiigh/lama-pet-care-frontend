@@ -27,6 +27,7 @@ function EditUserContent() {
     registrationDate: "",
     birthDate: "",
     address: "",
+    role : "",
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -58,6 +59,7 @@ function EditUserContent() {
             registrationDate: data?.data?.created_at || "N/A",
             birthDate: data?.data?.birth_date || "N/A",
             address: data?.data?.address || "N/A",
+            role: data?.data?.role || "N/A",
           });
 
           // try to read pets from admin profile response if available
@@ -393,7 +395,7 @@ function EditUserContent() {
           </div>
         </form>
         {/* Pets section */}
-        <div className="mt-6">
+      <div className={`mt-6 ${formData.role === "owner"?"" : "hidden"}`}>
           <fieldset className="border border-gray-300 rounded-md p-4">
             <legend className="text-sm font-semibold text-gray-700 mb-4">สัตว์เลี้ยง</legend>
             {petsLoading ? (
@@ -467,10 +469,10 @@ function EditUserContent() {
               เพิ่มสัตว์เลี้ยง
             </button>
           </div>
+            <AddPetModal isOpen={isAddPetModalOpen} onClose={() => setIsAddPetModalOpen(false)} />
         </div>
 
         {/* Render AddPetModal */}
-        <AddPetModal isOpen={isAddPetModalOpen} onClose={() => setIsAddPetModalOpen(false)} />
       </AdminShell>
     </div>
   );
