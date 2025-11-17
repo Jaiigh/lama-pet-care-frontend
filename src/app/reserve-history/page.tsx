@@ -223,7 +223,6 @@ export default function Home() {
                             {statusOption}
                           </div>
                         ))}
-                        ;
                       </div>
                     )}
                   </div>
