@@ -4,8 +4,7 @@ import { useState, useEffect, Suspense, useMemo } from "react";
 import { Profile } from "@/interfaces/profileInterface";
 import { Pet } from "@/interfaces/petInterface";
 import { useSearchParams } from "next/navigation";
-import { getProfileByAdmin, updateProfileByAdmin ,getPetByAdminUsingOwnerId,addPetByAdmin} from "@/services/adminService";
-import { delay } from "framer-motion";
+import { getProfileByAdmin, updateProfileByAdmin, getPetByAdminUsingOwnerId, addPetByAdmin,deletePetByAdmin } from "@/services/adminService";
 
 export default function EditUserPage() {
   return (
@@ -134,7 +133,6 @@ function EditUserContent() {
       return Object.keys(newErrors).length === 0;
     }, [newPet]);
 
-    // Ensure pets state is updated correctly after adding a pet
     const handleAddPet = async () => {
       console.log("Attempting to add pet", newPet); // Debug log
       if (!isFormValid) {
@@ -147,13 +145,7 @@ function EditUserContent() {
       }
       try {
         const addedPet = await addPetByAdmin(newPet, token, userId);
-        if (addedPet) {
-          setPets((prev) => [...prev, addedPet]); // Update pets state with the new pet
-        } else {
-          console.warn("No pet returned from addPetByAdmin. Refetching pets.");
-          const fetchedPets = await getPetByAdminUsingOwnerId(userId, token);
-          setPets(Array.isArray(fetchedPets?.data.pets) ? fetchedPets.data.pets : []);
-        }
+        setPets((prev) => [...prev, addedPet]);
         onClose();
       } catch (err) {
         console.error("Error adding pet:", err);
@@ -278,6 +270,21 @@ function EditUserContent() {
         </div>
       </div>
     );
+  };
+
+  const handleDeletePet = async (petId: string) => {
+    try {
+      const confirmed = window.confirm("Are you sure you want to delete this pet?");
+      if (!confirmed) return;
+
+      // Call the API to delete the pet
+      await deletePetByAdmin(petId,token ||"");
+
+      // Refetch or update the pet list after deletion
+      setPets((prevPets) => prevPets.filter((pet) => pet.pet_id !== petId));
+    } catch (error) {
+      console.error("Failed to delete pet:", error);
+    }
   };
 
   return (
@@ -434,6 +441,14 @@ function EditUserContent() {
                         <label className="block text-sm font-medium text-gray-700">วันเกิด</label>
                         <p className="mt-1 block w-full rounded-md bg-gray-100 p-2 text-sm">{p.birth_date || "-"}</p>
                       </div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        onClick={() => handleDeletePet(p.pet_id)}
+                      >
+                        ลบ
+                      </button>
                     </div>
                   </fieldset>
                 ))}

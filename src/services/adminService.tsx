@@ -82,9 +82,25 @@ export const addPetByAdmin = async (petData: Partial<Pet>, adminToken: string ,u
         throw err;
     }
 };
+export async function deletePetByAdmin(petId: string, adminToken: string): Promise<void> {
+    const url = `${process.env.NEXT_PUBLIC_API_BASE}/pets/${petId}`;
+
+    const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+        },
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Failed to delete pet: ${res.status} ${text}`);
+    }
+}
 export default{
     getProfileByAdmin,
     updateProfileByAdmin,
     getPetByAdminUsingOwnerId,
-    addPetByAdmin
+    addPetByAdmin,
+    deletePetByAdmin
 }
