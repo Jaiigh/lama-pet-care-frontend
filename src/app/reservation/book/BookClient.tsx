@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PetOwnerCardSection from "../section/PetOwnerCardSection";
 import { Staff } from "@/interfaces/reservationFlowInterface";
+import { Pet } from "@/interfaces/profileInterface";
+import { getMyPets } from "@/services/profileService";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
@@ -53,12 +55,9 @@ const BookClient = () => {
     },
   ];
 
-  // Mock pet data
-  const mockPets = [
-    { id: "1", name: "สัตว์เลี้ยง" },
-    { id: "2", name: "โบ้" },
-    { id: "3", name: "แงว" },
-  ];
+  // Pet data state
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [loadingPets, setLoadingPets] = useState(true);
 
   // Mock time slots
   const timeSlots = [
@@ -109,6 +108,24 @@ const BookClient = () => {
       router.replace("/reservation");
     }
   }, [effectiveDate, router]);
+
+  // Fetch pets on component mount
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        setLoadingPets(true);
+        const petsData = await getMyPets();
+        setPets(petsData || []);
+      } catch (error) {
+        console.error("Error fetching pets:", error);
+        setPets([]);
+      } finally {
+        setLoadingPets(false);
+      }
+    };
+
+    fetchPets();
+  }, []);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
@@ -204,15 +221,16 @@ const BookClient = () => {
                     updateSelection({ petId: value || null });
                   }}
                   className="w-full h-[60px] px-4 pr-10 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#61C5AA] appearance-none cursor-pointer text-gray-700"
+                  disabled={loadingPets}
                 >
-                  <option value="">สัตว์เลี้ยง</option>
-                  {mockPets
-                    .filter((pet) => pet.id !== "1")
-                    .map((pet) => (
-                      <option key={pet.id} value={pet.id}>
-                        {pet.name}
-                      </option>
-                    ))}
+                  <option value="">
+                    {loadingPets ? "กำลังโหลด..." : "สัตว์เลี้ยง"}
+                  </option>
+                  {pets.map((pet) => (
+                    <option key={pet.pet_id} value={pet.pet_id}>
+                      {pet.name}
+                    </option>
+                  ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <svg

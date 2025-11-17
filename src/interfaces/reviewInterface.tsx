@@ -35,3 +35,15 @@ export interface ServiceReviewResponse {
   };
 }
 
+export interface StaffReviewItem {
+  date: string;
+  comment: string;
+  score: number;
+}
+
+export interface StaffReviewSummary {
+  average_score: number;
+  review_count: number;
+  reviews: StaffReviewItem[];
+  years_as_member?: number;
+}
