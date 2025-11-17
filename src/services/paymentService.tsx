@@ -26,12 +26,14 @@ export const getSinglePagePayment = async (
       // Return empty data instead of throwing to prevent breaking the page
       console.warn(`Failed to fetch payment page ${page}:`, response.statusText);
       return {
+        massage: `Failed to fetch payment page ${page}`,
         data: {
           payments: [],
           amount: 0,
+          page: page,
         },
         status: response.status,
-      } as PaymentApiResponse;
+      };
     }
 
     const json = await response.json();
@@ -42,12 +44,14 @@ export const getSinglePagePayment = async (
     // Return empty data instead of throwing to prevent breaking the page
     console.warn("Error fetching payment:", err);
     return {
+      massage: "Error fetching payment",
       data: {
         payments: [],
         amount: 0,
+        page: page,
       },
       status: 500,
-    } as PaymentApiResponse;
+    };
   }
 };
 
