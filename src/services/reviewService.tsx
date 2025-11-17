@@ -198,7 +198,7 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
             service.staff_name ||
             service.caretaker_name;
 
-          let staffAvatar: string | undefined =
+          const staffAvatar: string | undefined =
             serviceDetail.staff?.profile_image ||
             serviceDetail.caretaker?.profile_image ||
             serviceDetail.staff_avatar ||
@@ -423,7 +423,7 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
             serviceDetail.staff_name ||
             serviceDetail.caretaker_name;
 
-          let staffAvatar: string | undefined =
+          const staffAvatar: string | undefined =
             serviceDetail.staff?.profile_image ||
             serviceDetail.caretaker?.profile_image ||
             serviceDetail.staff_avatar ||
@@ -676,9 +676,9 @@ export const getCaretakersForOwner = async (): Promise<CaretakerInfo[]> => {
     const caretakers: CaretakerInfo[] = await Promise.all(
       Array.from(caretakerMap.entries()).map(async ([caretakerId, info]) => {
         // Use name from service data if available
-        let caretakerName =
+        const caretakerName =
           caretakerNameMap.get(caretakerId) || "Unknown Caretaker";
-        let caretakerAvatar = caretakerAvatarMap.get(caretakerId);
+        const caretakerAvatar = caretakerAvatarMap.get(caretakerId);
 
         return {
           user_id: caretakerId,
