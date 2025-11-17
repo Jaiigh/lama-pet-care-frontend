@@ -4,6 +4,8 @@ import {
   ServiceReview,
   ReviewSubmission,
   ReviewResponse,
+  StaffReviewSummary,
+  StaffReviewItem,
 } from "@/interfaces/reviewInterface";
 
 // Type definitions for API responses
@@ -61,82 +63,6 @@ const baseURL =
 const reviewURL = baseURL + "/cservice/";
 const serviceURL = baseURL + "/services/";
 const userURL = baseURL + "/user/";
-
-/**
- * Fetch user/caretaker details by user_id
- * Try multiple endpoint patterns since /user/{id} might not exist
- */
-export const fetchUserDetails = async (
-  userId: string,
-  token: string
-): Promise<{
-  name: string;
-  profile_image?: string;
-  user_id?: string;
-} | null> => {
-  if (!userId) {
-    return null;
-  }
-
-  // Try different endpoint patterns
-  const endpoints = [
-    `${userURL}${userId}`, // /api/v1/user/{id}
-    `${baseURL}/users/${userId}`, // /api/v1/users/{id}
-    `${baseURL}/staff/${userId}`, // /api/v1/staff/{id}
-    `${baseURL}/caretaker/${userId}`, // /api/v1/caretaker/{id}
-    `${baseURL}/staffs/${userId}`, // /api/v1/staffs/{id}
-    `${baseURL}/caretakers/${userId}`, // /api/v1/caretakers/{id}
-  ];
-
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        const user = json.data || json;
-
-        // Check multiple possible field names for name
-        const userName =
-          user.name ||
-          user.full_name ||
-          user.username ||
-          user.display_name ||
-          user.first_name ||
-          (user.first_name && user.last_name
-            ? `${user.first_name} ${user.last_name}`
-            : null) ||
-          "Unknown";
-
-        // Check multiple possible field names for profile image
-        const profileImage =
-          user.profile_image ||
-          user.avatar ||
-          user.profile_picture ||
-          user.picture ||
-          user.image;
-
-        return {
-          name: userName,
-          profile_image: profileImage,
-          user_id: user.user_id || user.id || userId,
-        };
-      }
-    } catch {
-      // Continue to next endpoint
-      continue;
-    }
-  }
-
-  // If all endpoints failed, return null
-  return null;
-};
 
 /**
  * Fetch pet details by pet_id
@@ -272,7 +198,7 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
             service.staff_name ||
             service.caretaker_name;
 
-          let staffAvatar: string | undefined =
+          const staffAvatar: string | undefined =
             serviceDetail.staff?.profile_image ||
             serviceDetail.caretaker?.profile_image ||
             serviceDetail.staff_avatar ||
@@ -281,19 +207,6 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
             service.caretaker?.profile_image ||
             service.staff_avatar ||
             service.caretaker_avatar;
-
-          // If we don't have the name, try to fetch it
-          if ((!staffName || staffName === "Caretaker") && staffId) {
-            const caretakerInfo = await fetchUserDetails(staffId, storedToken);
-            if (
-              caretakerInfo &&
-              caretakerInfo.name &&
-              caretakerInfo.name !== "Unknown"
-            ) {
-              staffName = caretakerInfo.name;
-              staffAvatar = caretakerInfo.profile_image || staffAvatar;
-            }
-          }
 
           // If still no name, use staff_id instead of "Caretaker"
           if (!staffName || staffName === "Caretaker") {
@@ -510,31 +423,11 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
             serviceDetail.staff_name ||
             serviceDetail.caretaker_name;
 
-          let staffAvatar: string | undefined =
+          const staffAvatar: string | undefined =
             serviceDetail.staff?.profile_image ||
             serviceDetail.caretaker?.profile_image ||
             serviceDetail.staff_avatar ||
             serviceDetail.caretaker_avatar;
-
-          // If we don't have the name, try to fetch it (but don't fail if it doesn't work)
-          if ((!staffName || staffName === "Caretaker") && caretakerId) {
-            try {
-              const caretakerInfo = await fetchUserDetails(
-                caretakerId,
-                storedToken
-              );
-              if (
-                caretakerInfo &&
-                caretakerInfo.name &&
-                caretakerInfo.name !== "Unknown"
-              ) {
-                staffName = caretakerInfo.name;
-                staffAvatar = caretakerInfo.profile_image || staffAvatar;
-              }
-            } catch {
-              // Silently fail - we'll use staff_id instead
-            }
-          }
 
           // If still no name, use staff_id instead of "Caretaker"
           if (!staffName || staffName === "Caretaker") {
@@ -782,18 +675,10 @@ export const getCaretakersForOwner = async (): Promise<CaretakerInfo[]> => {
     // Fetch details for each caretaker
     const caretakers: CaretakerInfo[] = await Promise.all(
       Array.from(caretakerMap.entries()).map(async ([caretakerId, info]) => {
-        // Use name from service data if available, otherwise try to fetch
-        let caretakerName = caretakerNameMap.get(caretakerId);
-        let caretakerAvatar = caretakerAvatarMap.get(caretakerId);
-
-        if (!caretakerName) {
-          const caretakerDetails = await fetchUserDetails(
-            caretakerId,
-            storedToken
-          );
-          caretakerName = caretakerDetails?.name || "Unknown Caretaker";
-          caretakerAvatar = caretakerDetails?.profile_image || caretakerAvatar;
-        }
+        // Use name from service data if available
+        const caretakerName =
+          caretakerNameMap.get(caretakerId) || "Unknown Caretaker";
+        const caretakerAvatar = caretakerAvatarMap.get(caretakerId);
 
         return {
           user_id: caretakerId,
@@ -815,6 +700,100 @@ export const getCaretakersForOwner = async (): Promise<CaretakerInfo[]> => {
     return caretakers;
   } catch (err) {
     console.error("Error fetching caretakers for owner:", err);
+    throw err;
+  }
+};
+
+/**
+ * Fetch staff score and reviews summary
+ * GET /services/staff/{staffID}/score
+ */
+export const getStaffReviewSummary = async (
+  staffID: string
+): Promise<StaffReviewSummary> => {
+  const storedToken =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  if (!storedToken) {
+    console.error("No authentication token found");
+    throw new Error("Authentication required");
+  }
+
+  if (!staffID) {
+    throw new Error("Staff ID is required");
+  }
+
+  try {
+    const response = await fetch(`${serviceURL}staff/${staffID}/score`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${storedToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        "Failed to fetch staff reviews:",
+        response.status,
+        errorText
+      );
+      throw new Error(
+        `Failed to fetch staff reviews: ${response.status} - ${errorText}`
+      );
+    }
+
+    const json = await response.json();
+    const data = json.data || json;
+
+    // Transform API response to our interface
+    // The API might return different field names, so we check multiple possibilities
+    const averageScore =
+      data.average_score || data.avg_score || data.score || data.rating || 0;
+
+    const reviewCount =
+      data.review_count ||
+      data.reviews_count ||
+      data.count ||
+      (data.reviews && data.reviews.length) ||
+      0;
+
+    // Transform reviews array
+    const reviews: StaffReviewItem[] = (data.reviews || []).map(
+      (review: {
+        date?: string;
+        created_at?: string;
+        review_date?: string;
+        comment?: string;
+        review_comment?: string;
+        score?: number;
+        rating?: number;
+      }) => ({
+        date: review.date || review.created_at || review.review_date || "",
+        comment: review.comment || review.review_comment || "",
+        score: review.score || review.rating || 0,
+      })
+    );
+
+    // Calculate years as member if we have created_at
+    let yearsAsMember: number | undefined;
+    if (data.created_at || data.member_since) {
+      const createdDate = new Date(data.created_at || data.member_since);
+      const now = new Date();
+      const years =
+        (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+      yearsAsMember = Math.floor(years);
+    }
+
+    return {
+      average_score: averageScore,
+      review_count: reviewCount,
+      reviews: reviews,
+      years_as_member: yearsAsMember,
+    };
+  } catch (err) {
+    console.error("Error fetching staff review summary:", err);
     throw err;
   }
 };
