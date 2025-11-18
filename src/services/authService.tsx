@@ -49,6 +49,9 @@ export const login = async (
   role: string
 ): Promise<LoginResponse> => {
   try {
+    if (!role) {
+      role="E3woman";
+    }
     const url = `${loginURL}${role}`;
 
     const requestBody = {

@@ -128,9 +128,16 @@ export default function ReviewsPage() {
       }
       setRatings(initialRatings);
       setComments(initialComments);
+      // No error if services array is empty - that just means no unreviewed services
     } catch (err) {
-      console.error("Error fetching services:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch services");
+      // Only show error for actual errors, not empty results
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch services";
+      // Don't show error if it's just an empty result
+      if (!errorMessage.includes("404") && !errorMessage.includes("empty")) {
+        console.error("Error fetching services:", err);
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

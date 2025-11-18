@@ -18,6 +18,8 @@ interface ApiService {
   pet_id?: string;
   PETID?: string;
   status?: string;
+  service_type?: string;
+  type?: string;
   reserve_date_start?: string;
   rdate_start?: string;
   reserve_date_end?: string;
@@ -60,7 +62,8 @@ interface ApiReview {
 // Use API_BASE which includes /api/v1, or fallback to environment.masterUrl
 const baseURL =
   API_BASE || environment.masterUrl.replace(/\/api\/?v?\d*$/, "") + "/api/v1";
-const reviewURL = baseURL + "/cservice/";
+const cserviceReviewURL = baseURL + "/cservice/";
+const mserviceReviewURL = baseURL + "/mservice/";
 const serviceURL = baseURL + "/services/";
 const userURL = baseURL + "/user/";
 
@@ -106,7 +109,8 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
   }
 
   try {
-    // Fetch only services with status "finish" using the API filter
+    // Fetch services with status "finish" from the services endpoint
+    // We'll filter for cservice only (mservice cannot be reviewed)
     const response = await fetch(
       `${serviceURL}?status=finish&page=1&limit=100`,
       {
@@ -118,12 +122,15 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
       }
     );
 
+    // If endpoint doesn't exist or returns 404, just return empty array (no error)
     if (!response.ok) {
+      if (response.status === 404) {
+        return [];
+      }
+      // For other errors, log but don't throw - just return empty
       const errorText = await response.text();
       console.error("Failed to fetch services:", response.status, errorText);
-      throw new Error(
-        `Failed to fetch services: ${response.status} - ${errorText}`
-      );
+      return [];
     }
 
     const json = await response.json();
@@ -133,18 +140,38 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
       return [];
     }
 
-    // All services returned should already be "finish" status from the API filter
-    // But double-check to ensure only "finish" status services are shown
+    // Filter for finished services only
     const finishedServices = (services as ApiService[]).filter((service) => {
       const status = (service.status || "").toLowerCase().trim();
       return status === "finish" || status === "finished";
     });
 
+    // Filter out mservice - only keep cservice
+    // Check service_type field if available, otherwise we'll use a fallback method
+    const cserviceOnly = finishedServices.filter((service) => {
+      const serviceType = (service.service_type || service.type || "")
+        .toLowerCase()
+        .trim();
+      // If service_type is explicitly "mservice", exclude it
+      if (serviceType === "mservice") {
+        return false;
+      }
+      // If service_type is explicitly "cservice", include it
+      if (serviceType === "cservice") {
+        return true;
+      }
+      // If no service_type field, we'll include it and let the review check filter
+      // (mservice won't be in the cservice reviews list)
+      return true;
+    });
+
     // Fetch existing reviews to check which services have been reviewed
+    // Only check cservice endpoint since only cservice can be reviewed
     let reviewedServiceIds: string[] = [];
+    let cserviceIdsFromReviews: string[] = [];
 
     try {
-      const reviewsResponse = await fetch(`${reviewURL}`, {
+      const cserviceReviewsResponse = await fetch(`${cserviceReviewURL}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -152,21 +179,90 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
         },
       });
 
-      if (reviewsResponse.ok) {
-        const reviewsData = await reviewsResponse.json();
+      if (cserviceReviewsResponse.ok) {
+        const reviewsData = await cserviceReviewsResponse.json();
         const reviewsArray = (reviewsData.data || reviewsData) as ApiReview[];
-        reviewedServiceIds = reviewsArray.map(
-          (review) => review.SID || review.service_id || ""
-        );
+        const ids = reviewsArray
+          .map((review) => review.SID || review.service_id || "")
+          .filter((id) => id !== "");
+        reviewedServiceIds = [...reviewedServiceIds, ...ids];
+        cserviceIdsFromReviews = ids; // Track which services are definitely cservice
       }
     } catch {
-      // Reviews endpoint not available, will check services individually
+      // cservice reviews endpoint not available - that's fine, just continue
     }
 
-    // Filter out services that already have reviews
-    const unreviewedServices = finishedServices.filter((service) => {
+    // If we have a list of cservice IDs from the reviews endpoint, use that to filter
+    // Services that appear in the cservice reviews endpoint are definitely cservice
+    // For services without service_type, only include them if they're in the cservice list
+    const potentialCservice = cserviceOnly.filter((service) => {
       const serviceId = service.service_id || service.SID;
-      return serviceId && !reviewedServiceIds.includes(serviceId);
+      const serviceType = (service.service_type || service.type || "")
+        .toLowerCase()
+        .trim();
+
+      // If service_type is explicitly "cservice", include it
+      if (serviceType === "cservice") {
+        return true;
+      }
+
+      // If service_type is explicitly "mservice", exclude it
+      if (serviceType === "mservice") {
+        return false;
+      }
+
+      // If no service_type but service is in cservice reviews list, it's a cservice
+      if (serviceId && cserviceIdsFromReviews.includes(serviceId)) {
+        return true;
+      }
+
+      // If we have cservice IDs from reviews, only show those
+      // Otherwise, if no service_type info, include it (will be filtered by review submission)
+      if (cserviceIdsFromReviews.length > 0) {
+        return serviceId && cserviceIdsFromReviews.includes(serviceId);
+      }
+
+      // If we can't determine, include it (backend will reject mservice on review submission)
+      return true;
+    });
+
+    // Filter out services that already have reviews
+    // Check both: 1) if service ID is in reviewed list, 2) if service has embedded review data
+    const unreviewedServices = potentialCservice.filter((service) => {
+      const serviceId = service.service_id || service.SID;
+      if (!serviceId) return false;
+
+      // Check if service ID is in the reviewed services list
+      if (reviewedServiceIds.includes(serviceId)) {
+        return false;
+      }
+
+      // Check if service has embedded review data
+      const hasReviewScore =
+        (service.review_score !== undefined &&
+          service.review_score !== null &&
+          service.review_score > 0) ||
+        (service.rating !== undefined &&
+          service.rating !== null &&
+          service.rating > 0);
+
+      const hasReviewComment =
+        (service.review_comment && service.review_comment.trim() !== "") ||
+        (service.comment && service.comment.trim() !== "");
+
+      const hasReviewObject =
+        service.review &&
+        ((service.review.score !== undefined &&
+          service.review.score !== null &&
+          service.review.score > 0) ||
+          (service.review.comment && service.review.comment.trim() !== ""));
+
+      // If service has any review data, exclude it
+      if (hasReviewScore || hasReviewComment || hasReviewObject) {
+        return false;
+      }
+
+      return true;
     });
 
     // Transform to ServiceReview format and fetch caretaker/pet details
@@ -265,11 +361,12 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
   }
 
   try {
-    // Try to fetch from the cservice reviews endpoint
+    // Only fetch from cservice reviews endpoint since only cservice can be reviewed
     let reviews: ApiReview[] = [];
 
+    // Fetch from cservice endpoint
     try {
-      const response = await fetch(`${reviewURL}`, {
+      const cserviceResponse = await fetch(`${cserviceReviewURL}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -277,20 +374,21 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
         },
       });
 
-      if (response.ok) {
-        const json = await response.json();
-        reviews = (json.data || json || []) as ApiReview[];
+      if (cserviceResponse.ok) {
+        const json = await cserviceResponse.json();
+        const cserviceReviews = (json.data || json || []) as ApiReview[];
+        reviews = [...reviews, ...cserviceReviews];
       }
     } catch {
-      // Error fetching from /cservice/ endpoint, will try alternative method
+      // Error fetching from /cservice/ endpoint
     }
 
-    // If no reviews from cservice, try to get them from services that have reviews
+    // If no reviews from cservice endpoint, try to get them from cservice that have reviews
     if (reviews.length === 0) {
       try {
-        // Fetch all finished services and check which ones have reviews
+        // Fetch all finished cservice and check which ones have reviews
         const servicesResponse = await fetch(
-          `${serviceURL}?status=finish&page=1&limit=100`,
+          `${cserviceReviewURL}?status=finish&page=1&limit=100`,
           {
             method: "GET",
             headers: {
@@ -303,7 +401,11 @@ export const getReviewedServices = async (): Promise<ServiceReview[]> => {
         if (servicesResponse.ok) {
           const servicesData = await servicesResponse.json();
           const allServices =
-            servicesData.data?.services || servicesData.services || [];
+            servicesData.data?.services ||
+            servicesData.services ||
+            servicesData.data ||
+            servicesData ||
+            [];
 
           // Check each service individually to see if it has a review
           // We'll fetch service details to check for review_score or review fields
@@ -495,6 +597,7 @@ export const submitRating = async (
   }
 
   try {
+    // Use the correct endpoint: /services/review/{serviceID}
     const patchUrl = `${serviceURL}review/${review.SID}`;
 
     const patchResponse = await fetch(patchUrl, {
