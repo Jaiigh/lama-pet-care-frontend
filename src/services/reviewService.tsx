@@ -109,39 +109,101 @@ export const getUnreviewedServices = async (): Promise<ServiceReview[]> => {
   }
 
   try {
-    // Fetch services with status "finish" from the services endpoint
-    // We'll filter for cservice only (mservice cannot be reviewed)
-    const response = await fetch(
-      `${serviceURL}?status=finish&page=1&limit=100`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${storedToken}`,
-        },
-      }
+    // Fetch all services from the services endpoint with pagination
+    // We'll filter for finished cservice on the frontend (backend doesn't support status filter)
+    let allServices: ApiService[] = [];
+    let currentPage = 1;
+    let amountOfItems = 0;
+    let hasMorePages = true;
+    const limit = 100;
+
+    console.log(
+      "Fetching all services for review (will filter finished on frontend)..."
     );
 
-    // If endpoint doesn't exist or returns 404, just return empty array (no error)
-    if (!response.ok) {
-      if (response.status === 404) {
-        return [];
+    while (hasMorePages) {
+      const response = await fetch(
+        `${serviceURL}?page=${currentPage}&limit=${limit}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${storedToken}`,
+          },
+        }
+      );
+
+      // If endpoint doesn't exist or returns 404, just return empty array (no error)
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log("Services endpoint returned 404, no services found");
+          break;
+        }
+        // For other errors, log but don't throw - just return empty
+        const errorText = await response.text();
+        console.error("Failed to fetch services:", response.status, errorText);
+        break;
       }
-      // For other errors, log but don't throw - just return empty
-      const errorText = await response.text();
-      console.error("Failed to fetch services:", response.status, errorText);
+
+      const json = await response.json();
+      const services = json.data?.services || json.services || [];
+
+      if (currentPage === 1) {
+        amountOfItems = json.data?.amount || 0;
+        console.log("Total services reported by backend:", amountOfItems);
+      }
+
+      if (services.length > 0) {
+        allServices = [...allServices, ...services];
+        console.log(
+          `Page ${currentPage}: Fetched ${services.length} services. Total so far: ${allServices.length}`
+        );
+      }
+
+      // Stop if no more items on this page
+      if (services.length === 0) {
+        hasMorePages = false;
+        console.log("No more services on page", currentPage);
+      }
+      // Stop if we've fetched all items according to backend
+      else if (amountOfItems > 0 && allServices.length >= amountOfItems) {
+        hasMorePages = false;
+        console.log("Fetched all services according to backend count");
+      }
+      // Stop if backend reported 0 items
+      else if (amountOfItems === 0 && currentPage === 1) {
+        hasMorePages = false;
+        console.log("Backend reported 0 services");
+      }
+      // Continue to next page
+      else {
+        currentPage++;
+        // Safety check: don't loop forever (max 1000 pages = 100,000 items)
+        if (currentPage > 1000) {
+          console.warn(
+            "Reached maximum page limit (1000). Stopping pagination."
+          );
+          hasMorePages = false;
+        }
+      }
+    }
+
+    console.log(
+      "Total services fetched:",
+      allServices.length,
+      "out of",
+      amountOfItems,
+      "reported by backend"
+    );
+
+    if (allServices.length === 0) {
       return [];
     }
 
-    const json = await response.json();
-    const services = json.data?.services || json.services || [];
-
-    if (services.length === 0) {
-      return [];
-    }
+    const services = allServices;
 
     // Filter for finished services only
-    const finishedServices = (services as ApiService[]).filter((service) => {
+    const finishedServices = services.filter((service) => {
       const status = (service.status || "").toLowerCase().trim();
       return status === "finish" || status === "finished";
     });
@@ -879,6 +941,23 @@ export const getStaffReviewSummary = async (
       })
     );
 
+    // Calculate average score from reviews if we have reviews
+    // This ensures accuracy even if backend doesn't provide correct average
+    let calculatedAverageScore = averageScore;
+    if (reviews.length > 0) {
+      const validScores = reviews
+        .map((r) => r.score)
+        .filter((score) => score > 0 && score <= 5); // Only valid scores (1-5)
+      if (validScores.length > 0) {
+        const sum = validScores.reduce((acc, score) => acc + score, 0);
+        calculatedAverageScore = sum / validScores.length;
+      } else {
+        calculatedAverageScore = 0;
+      }
+    } else if (reviewCount === 0) {
+      calculatedAverageScore = 0;
+    }
+
     // Calculate years as member if we have created_at
     let yearsAsMember: number | undefined;
     if (data.created_at || data.member_since) {
@@ -890,8 +969,8 @@ export const getStaffReviewSummary = async (
     }
 
     return {
-      average_score: averageScore,
-      review_count: reviewCount,
+      average_score: calculatedAverageScore,
+      review_count: reviews.length > 0 ? reviews.length : reviewCount,
       reviews: reviews,
       years_as_member: yearsAsMember,
     };

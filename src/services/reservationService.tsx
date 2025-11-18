@@ -43,30 +43,52 @@ export const getAllReservation = async (): Promise<Reservation[]> => {
   let currentPage = 1;
   let amountOfItems = 0;
   let hasMorePages = true;
+  const limit = 100;
 
   console.log("Fetching all reservations...");
 
   while (hasMorePages) {
-      const response = await getSinglePageReservation(currentPage, 5);
-      const reservations = response.data.services;
+      const response = await getSinglePageReservation(currentPage, limit);
+      const reservations = response.data?.services || [];
+      
       if(currentPage === 1) {
-        amountOfItems = response.data.amount;
+        amountOfItems = response.data?.amount || 0;
+        console.log("Total items reported by backend:", amountOfItems);
       }
 
-      allReservations = [...allReservations, ...reservations];
+      // Add reservations from this page
+      if (reservations.length > 0) {
+        allReservations = [...allReservations, ...reservations];
+        console.log(`Page ${currentPage}: Fetched ${reservations.length} reservations. Total so far: ${allReservations.length}`);
+      }
 
-      if(allReservations.length >=amountOfItems) {
+      // Stop if no more items on this page
+      if (reservations.length === 0) {
         hasMorePages = false;
-      }else{
+        console.log("No more reservations on page", currentPage);
+      }
+      // Stop if we've fetched all items according to backend
+      else if (amountOfItems > 0 && allReservations.length >= amountOfItems) {
+        hasMorePages = false;
+        console.log("Fetched all items according to backend count");
+      }
+      // Stop if backend reported 0 items
+      else if (amountOfItems === 0 && currentPage === 1) {
+        hasMorePages = false;
+        console.log("Backend reported 0 items");
+      }
+      // Continue to next page
+      else {
         currentPage++;
-      }
-
-      if(amountOfItems === 0) {
-        hasMorePages = false;
+        // Safety check: don't loop forever (max 1000 pages = 100,000 items)
+        if (currentPage > 1000) {
+          console.warn("Reached maximum page limit (1000). Stopping pagination.");
+          hasMorePages = false;
+        }
       }
   }
 
-  console.log("Total reservations fetched:", allReservations.length);
+  console.log("Total reservations fetched:", allReservations.length, "out of", amountOfItems, "reported by backend");
   return allReservations;
 };
 
