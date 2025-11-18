@@ -1,11 +1,8 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
-import {
-  Reservation,
-  ReservationApiResponse,
-} from "@/interfaces/reservationInterface";
-import { Payment, PaymentApiResponse } from "@/interfaces/paymentInterface";
+import { useEffect, useState } from "react";
+import { Reservation } from "@/interfaces/reservationInterface";
+import { Payment } from "@/interfaces/paymentInterface";
 import {
   getAllReservation,
   updateReservationStatus,
@@ -23,6 +20,17 @@ export default function Home() {
     const fetchReservations = async () => {
       try {
         const response: Reservation[] = await getAllReservation();
+        console.log("Fetched all reservations:", response.length);
+        console.log("User role:", UserRole);
+        console.log("User ID:", userId);
+        if (response.length > 0) {
+          console.log("First reservation sample:", {
+            service_id: response[0].service_id,
+            staff_id: response[0].staff_id,
+            owner_id: response[0].owner_id,
+            status: response[0].status,
+          });
+        }
         setReservations(response);
       } catch (error) {
         console.error("Error fetching reservations:", error);
@@ -67,8 +75,8 @@ export default function Home() {
   // ----------- reservation status update --------------
   const UserRole =
     typeof window !== "undefined" ? localStorage.getItem("role") : null;
-  const CanChangeStatusRole = ["doctor", "caretaker"];
-  const canChangeStatus = UserRole && CanChangeStatusRole.includes(UserRole);
+  const CanChangeStatusRole = new Set(["doctor", "caretaker"]);
+  const canChangeStatus = UserRole && CanChangeStatusRole.has(UserRole);
   const [openReservationId, setOpenReservationId] = useState<string | null>(
     null
   );
@@ -93,8 +101,45 @@ export default function Home() {
     handleUpdateStatus(newStatus, reservationId);
   };
 
-  // Filter reservations based on selected tab
+  // Get user_id for role-based filtering
+  const userId =
+    typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
+
+  // Filter reservations based on role and selected tab
   const filteredReservations = reservations.filter((reserve) => {
+    // For caretakers and doctors: only show reservations where they are the staff
+    // Note: Backend should already filter by role, but we add frontend filter as safety
+    if (UserRole && CanChangeStatusRole.has(UserRole)) {
+      // Only filter if we have userId - if not, trust backend filtering
+      if (userId) {
+        const staffIdStr = String(reserve.staff_id || "").trim();
+        const userIdStr = String(userId || "").trim();
+        // If IDs don't match, filter out
+        if (staffIdStr && userIdStr && staffIdStr !== userIdStr) {
+          return false;
+        }
+        // If staff_id is empty but we have userId, might be a new service issue
+        // Log for debugging but don't filter out (backend should handle)
+        if (!staffIdStr && userIdStr) {
+          console.warn("Reservation with empty staff_id:", {
+            service_id: reserve.service_id,
+            userId,
+          });
+        }
+      }
+    }
+    // For owners: only show reservations where they are the owner
+    else if (UserRole && UserRole.toLowerCase() === "owner") {
+      if (userId) {
+        const ownerIdStr = String(reserve.owner_id || "").trim();
+        const userIdStr = String(userId || "").trim();
+        if (ownerIdStr && userIdStr && ownerIdStr !== userIdStr) {
+          return false;
+        }
+      }
+    }
+
+    // Filter by status tab
     if (selectedFilter === "all") {
       return true;
     }
@@ -110,6 +155,24 @@ export default function Home() {
     }
     return true;
   });
+
+  // Debug logging for filtered results
+  useEffect(() => {
+    if (UserRole && CanChangeStatusRole.has(UserRole)) {
+      console.log("Caretaker/Doctor view - Filtered reservations:", {
+        total: reservations.length,
+        filtered: filteredReservations.length,
+        userId,
+        role: UserRole,
+      });
+    }
+  }, [
+    reservations,
+    filteredReservations,
+    UserRole,
+    userId,
+    CanChangeStatusRole,
+  ]);
 
   return (
     <div className="reserve-management p-5">

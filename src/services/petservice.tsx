@@ -20,10 +20,14 @@ interface PetsResponse {
 
 export async function getPetsByOwner(): Promise<Pet[]> {
     const url = `${petURL}/owner`;
-
+const storedToken =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const res = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${storedToken}`
+        },
     });
 
     if (!res.ok) {
