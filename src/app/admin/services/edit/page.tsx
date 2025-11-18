@@ -641,7 +641,6 @@ function EditServiceContent() {
           </div>
         </fieldset>
 
-       
         {/* Action Buttons */}
         <div className="flex gap-4">
           {!isEditing ? (
